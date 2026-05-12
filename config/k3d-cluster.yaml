@@ -1,0 +1,39 @@
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: lab
+servers: 1
+agents: 2
+image: rancher/k3s:latest
+
+ports:
+  - port: 0.0.0.0:30080:30080
+    nodeFilters:
+      - loadbalancer
+  - port: 0.0.0.0:30880:30880
+    nodeFilters:
+      - loadbalancer
+  - port: 0.0.0.0:30443:30443
+    nodeFilters:
+      - loadbalancer
+  - port: 0.0.0.0:32746:32746
+    nodeFilters:
+      - loadbalancer
+  - port: 0.0.0.0:8080:80
+    nodeFilters:
+      - loadbalancer
+  - port: 0.0.0.0:8443:443
+    nodeFilters:
+      - loadbalancer
+
+# volumes:
+#   - volume: ./sensitive/corp-self-signed.crt:/usr/local/share/ca-certificates/corporate.crt
+#     nodeFilters:
+#       - all
+
+options:
+  k3s:
+    extraArgs:
+      - arg: --node-label=ingress-ready=true
+        nodeFilters:
+          - server:0

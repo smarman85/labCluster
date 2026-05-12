@@ -1,0 +1,26 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus
+  namespace: argocd
+spec:
+  destination:
+    namespace: monitoring
+    name: in-cluster
+  project: default
+  source:
+    path: charts/kube-prometheus-stack
+    # path: charts/prometheus
+    repoURL: https://github.com/smarman85/kindSampleCluster.git
+    targetRevision: HEAD
+    helm:
+      valueFiles:
+      - ../../overrides/kube-prometheus-stack.yaml
+  syncPolicy:
+    automated:
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+  revisionHistoryLimit: 2

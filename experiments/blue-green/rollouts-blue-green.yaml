@@ -1,0 +1,22 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: blue-green
+  namespace: argocd
+spec:
+  destination:
+    namespace: blue-green
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: charts/blue-green
+    repoURL: https://github.com/smarman85/kindSampleCluster.git
+    targetRevision: HEAD
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+  revisionHistoryLimit: 1

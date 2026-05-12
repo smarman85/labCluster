@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fullapp-ingress
+  namespace: fullapp
+  annotations:
+    kubernetes.io/ingress.class: alb
+spec:
+  rules:
+  - host: fullapp.qa.com
+    http:
+      paths:
+      # no value in path means alb rule won't include path, /* means everything which is not the same as / in nginx
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: fullapp-service
+              port: 
+                number: 80

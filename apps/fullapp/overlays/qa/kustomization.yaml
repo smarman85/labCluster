@@ -1,0 +1,9 @@
+resources:
+  - ../../base
+
+configMapGenerator:
+  - envs:
+      - qa-env.yaml
+    name: env-vars
+    namespace: fullapp
+    behavior: merge

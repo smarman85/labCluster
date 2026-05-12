@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: env-vars-webhooks-tf
+data:
+  AWS_ACCESS_KEY_ID: ""
+  AWS_SECRET_ACCESS_KEY: ""
+  AWS_SESSION_TOKEN: ""
+  SECRET_PATH: testing/value
+  YOPASS_URL: yopass.yopass.svc
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: key-webhooks-tf
+data:
+  key: ""

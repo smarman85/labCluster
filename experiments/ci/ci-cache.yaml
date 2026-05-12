@@ -1,0 +1,25 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ci-cache
+  namespace: argocd
+  annotations:
+    meta.helm.sh/release-name: argo-events
+    meta.helm.sh/release-namespace: argocd
+spec:
+  destination:
+    namespace: ci-cache
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: demo/workflow-cache
+    repoURL: https://github.com/smarman85/kindSampleCluster.git
+    targetRevision: HEAD
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+  revisionHistoryLimit: 1

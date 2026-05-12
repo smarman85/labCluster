@@ -1,0 +1,39 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: secrets-store-csi-driver
+  namespace: argocd
+spec:
+  destination:
+    namespace: kube-system
+    name: in-cluster
+  project: default
+  source:
+    path: charts/secrets-store-csi-driver
+    repoURL: https://github.com/smarman85/kindSampleCluster.git
+    targetRevision: HEAD
+    helm:
+      values: |
+        syncSecret:
+          enabled: true
+        enableSecretRotation: true
+        linux:
+          env:
+            - name: AWS_REGION
+              value: us-east-1
+            - name: AWS_ACCESS_KEY_ID
+              value: "ZHVtbXktYWNjZXNzLWtleQ==" # Required. fake creds for localstack
+            - name: AWS_SECRET_ACCESS_KEY 
+              value: "ZHVtbXktc2VjcmV0LWtleQ==" # Required. fake creds for localstack
+            - name: AWS_SESSION_TOKEN
+              value: "ZHVtbXktc2VjcmV0LWtleQ==" # Required. fake creds for localstack
+            - name: AWS_ENDPOINT_URL
+              value: "http://localstack.localstack.svc.cluster.local:4566" # Localstack endpoint
+          providers: aws
+  syncPolicy:
+    automated:
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+  revisionHistoryLimit: 2

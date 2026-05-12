@@ -1,0 +1,35 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: external-secrets
+  namespace: argocd
+spec:
+  destination:
+    namespace: external-secrets
+    name: in-cluster
+  project: default
+  source:
+    repoURL: https://charts.external-secrets.io
+    chart: external-secrets
+    targetRevision: 0.18.1
+    helm:
+      values: |
+        installCRDs: true
+        webhook:
+          enabled: false
+        extraEnv:
+          - name: AWS_ACCESS_KEY_ID
+            value: default
+          - name: AWS_SECRET_ACCESS_KEY
+            value: default
+          - name: AWS_REGION
+            value: us-east-1
+          - name: AWS_ENDPOINT_URL
+            value: http://localstack.localstack:4566
+  syncPolicy:
+    automated:
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+  revisionHistoryLimit: 2

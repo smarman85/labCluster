@@ -1,0 +1,14 @@
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: seanpod
+  labels:
+    needone: nope
+spec:
+  containers:
+    - name: dev
+      image: golang:1.20-bullseye
+      tty: true
+      stdin: true
+      command: ["/bin/bash"]

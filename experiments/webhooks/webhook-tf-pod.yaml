@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sean
+spec:
+  containers:
+  - name: sean
+    tty: true
+    stdin: true
+    image: smarman/tst-runner:echo2
+    command: ["/bin/bash"]
+    envFrom:
+    - configMapRef:
+        name: env-vars-webhooks-tf
+    volumeMounts:
+      - mountPath: /var/mnt/key
+        name: key-volume
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+  volumes:
+    - name: key-volume
+      configMap:
+        name: key-webhooks-tf

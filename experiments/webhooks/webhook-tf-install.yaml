@@ -1,0 +1,213 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webhook
+spec:
+  rules:
+  - http:
+      paths:
+      - pathType: Prefix
+        path: /tf
+        backend:
+          service:
+            name: webhook-tf
+            port:
+              number: 80
+      - pathType: Prefix
+        path: /echo
+        backend:
+          service:
+            name: webhook-echo
+            port:
+              number: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhook-tf
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 12000
+  selector:
+    eventsource-name: webhook
+    controller: eventsource-controller
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhook-echo
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 13000
+  selector:
+    eventsource-name: webhook
+    controller: eventsource-controller
+---
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: webhook
+spec:
+  #service:
+  #  ports:
+  #    - port: 12000
+  #      targetPort: 12000
+  webhook:
+    # event-source can run multiple HTTP servers. Simply define a unique port to start a new HTTP server
+    example:
+      # port to run HTTP server on
+      port: "12000"
+      # endpoint to listen to
+      endpoint: /tf
+      # HTTP request method to allow. In this case, only POST requests are accepted
+      method: POST
+    whalesay:
+      port: "13000"
+      endpoint: /echo
+      method: POST
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: webhook
+spec:
+  template:
+    serviceAccountName: operate-workflow-sa
+  dependencies:
+    - name: test-dep
+      eventSourceName: webhook
+      eventName: example
+    - name: whalesay-dep
+      eventSourceName: webhook
+      eventName: whalesay
+  triggers:
+    - template:
+        name: whalesay-trigger
+        conditions: whalesay-dep
+        k8s:
+          operation: create
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: whalesay-hook-
+              spec:
+                entrypoint: echo
+                arguments:
+                  parameters:
+                  - name: message
+                    value: default
+                templates:
+                - name: echo
+                  inputs:
+                    parameters:
+                    - name: message
+                      value: default
+                  container:
+                    image: docker/whalesay:latest
+                    command: ['cowsay']
+                    args:
+                    - "{{inputs.parameters.message}}"
+          parameters:
+            - src:
+                dependencyName: whalesay-dep
+                dataKey: body.message
+              dest: spec.arguments.parameters.0.value
+    - template:
+        name: webhook-workflow-trigger
+        conditions: test-dep
+        k8s:
+          operation: create
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: webhook-
+              spec:
+                entrypoint: tf
+                arguments:
+                  parameters:
+                  - name: vControl
+                    # the value will get overridden by event payload from test-dep
+                    value: default
+                  - name: repoOwner
+                    value: default
+                  - name: repo
+                    value: default
+                  - name: sha
+                    value: default
+                  # - name: tfDir
+                  #   value: default
+                templates:
+                - name: tf
+                  inputs:
+                    parameters:
+                    - name: vControl
+                      value: default
+                    - name: repoOwner
+                      value: default
+                    - name: repo
+                      value: default
+                    - name: sha
+                      value: default
+                    # - name: tfDir
+                    #   value: default
+                  container:
+                    image: smarman/tst-runner:gpg
+                    command: ['/app/tf-apply.sh']
+                    args: 
+                      - "{{inputs.parameters.vControl}}"
+                      - "{{inputs.parameters.repoOwner}}"
+                      - "{{inputs.parameters.repo}}"
+                      - "{{inputs.parameters.sha}}"
+                      #- "{{inputs.parameters.tfDir}}"
+                    envFrom:
+                    - configMapRef:
+                        name: env-vars-webhooks-tf
+                    volumeMounts:
+                    - name: key-volume
+                      mountPath: /var/mnt/key
+                  volumes: 
+                  - name: key-volume
+                    configMap:
+                      name: key-webhooks-tf
+          parameters:
+            - src:
+                dependencyName: test-dep
+                dataKey: body.vControl
+              dest: spec.arguments.parameters.0.value
+            - src:
+                dependencyName: test-dep
+                dataKey: body.repoOwner
+              dest: spec.arguments.parameters.1.value
+            - src:
+                dependencyName: test-dep
+                dataKey: body.repo
+              dest: spec.arguments.parameters.2.value
+            - src:
+                dependencyName: test-dep
+                dataKey: body.sha
+              dest: spec.arguments.parameters.3.value
+              # - src:
+              #     dependencyName: test-dep
+              #     dataKey: body.tfDir
+              #   dest: spec.arguments.parameters.4.value
+---
+apiVersion: argoproj.io/v1alpha1
+kind: EventBus
+metadata:
+  name: default
+spec:
+  nats:
+    native:
+      # Optional, defaults to 3. If it is < 3, set it to 3, that is the minimal requirement.
+      replicas: 3
+      # Optional, authen strategy, "none" or "token", defaults to "none"
+      auth: token

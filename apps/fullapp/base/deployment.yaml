@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fullapp
+  namespace: fullapp
+spec:
+  # using the selector, we will expose the running deployments
+  # this is how Kubernetes knows, that a given service belongs to a deployment
+  selector:
+    matchLabels:
+      app: fullapp
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: fullapp
+        repo: fullapp
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  name: fullapp
+              topologyKey: kubernetes.io/hostname
+      serviceAccountName: fullapp-account
+      containers:
+      - name: fullapp-main
+        image: golang:1.23.2-alpine3.20
+        tty: true
+        stdin: true
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 400m
+            memory: 650M
+          requests:
+            cpu: 400m
+            memory: 650M
+        ports:
+          - containerPort: 3000
+        # Run your application command after sourcing env file or use the env file to your convenience
+        command: ['/bin/sh']
+        args: []
+        envFrom:
+          - configMapRef:
+              name: env-vars
