@@ -11,7 +11,7 @@ spec:
   project: default
   source:
     path: charts/blue-green
-    repoURL: https://github.com/smarman85/kindSampleCluster.git
+    repoURL: https://github.com/smarman85/labCluster.git
     targetRevision: HEAD
   syncPolicy:
     automated:

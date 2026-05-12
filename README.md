@@ -203,7 +203,7 @@ ex container spec:
 [Argo workflows](https://github.com/argoproj/argo-workflows/blob/main/examples/cron-workflow.yaml)
 [Argo events](https://github.com/argoproj/argo-events/tree/master/examples)
 
-# kindSampleCluster
+# labCluster
 
 
 ---

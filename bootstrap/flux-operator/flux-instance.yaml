@@ -2,7 +2,7 @@
 apiVersion: fluxcd.controlplane.io/v1
 kind: FluxInstance
 metadata:
-  name: flux-pod
+  name: flux
   namespace: flux-system
   annotations:
     fluxcd.controlplane.io/reconcileEvery: "1h"
@@ -20,6 +20,6 @@ spec:
     domain: "cluster.local"
   sync:
     kind: GitRepository
-    url: "https://github.com/smarman85/kindSampleCluster"
+    url: "https://github.com/smarman85/labCluster"
     ref: "refs/heads/main"
     path: "charts/kustomize/pods/overlays/qa"
