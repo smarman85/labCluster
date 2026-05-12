@@ -11,7 +11,7 @@ spec:
   project: default
   source:
     path: config/metrics
-    repoURL: https://github.com/smarman85/labCluster.git
+    repoURL: https://github.com/smarman85/kindSampleCluster.git
     targetRevision: HEAD
   syncPolicy:
     automated:

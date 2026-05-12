@@ -20,6 +20,6 @@ spec:
     domain: "cluster.local"
   sync:
     kind: GitRepository
-    url: "https://github.com/smarman85/labCluster"
+    url: "https://github.com/smarman85/kindSampleCluster"
     ref: "refs/heads/main"
     path: "charts/kustomize/pods/overlays/qa"

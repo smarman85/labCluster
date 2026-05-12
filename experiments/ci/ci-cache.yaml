@@ -14,7 +14,7 @@ spec:
   project: default
   source:
     path: demo/workflow-cache
-    repoURL: https://github.com/smarman85/labCluster.git
+    repoURL: https://github.com/smarman85/kindSampleCluster.git
     targetRevision: HEAD
   syncPolicy:
     automated:

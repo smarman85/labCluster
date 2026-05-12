@@ -10,7 +10,7 @@ spec:
   project: default
   source: 
     path: charts/uptime-test-app
-    repoURL: https://github.com/smarman85/labCluster.git
+    repoURL: https://github.com/smarman85/kindSampleCluster.git
     targetRevision: HEAD
   syncPolicy:
     automated:

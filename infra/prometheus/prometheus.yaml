@@ -12,7 +12,7 @@ spec:
   source:
     path: charts/kube-prometheus-stack
     # path: charts/prometheus
-    repoURL: https://github.com/smarman85/labCluster.git
+    repoURL: https://github.com/smarman85/kindSampleCluster.git
     targetRevision: HEAD
     helm:
       valueFiles:
