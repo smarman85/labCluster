@@ -2,12 +2,19 @@
 ## := is eager loading and vars get interpreted on each make call
 ## = is lazy loading and only get called when used by a make subcommand
 DATE := $(shell date +%FT%T%Z)
+EXPECTED_CONTEXT := k3d-lab
 CLUSTER_NAME := lab
 ADMIN_PASSWORD = $$2a$$10$$fHMjO5gJhVg1fSU/lUwubO96tr4OiaKp9TdHTAjYm4z8eIfLNJOgK # admin
 WEBHOOK_POD = $(shell kubectl -n argo-events get pod -l eventsource-name=webhook -o name)
 WEBHOOK_MULTI = $(shell kubectl -n argo-events get pod -l eventsource-name=test-api-eventsource -o name)
 CI_POD = $(shell kubectl -n ci get pod -l eventsource-name=webhook-deps-es -o name)
 CI_POD_CACHE = $(shell kubectl -n ci-cache get pod -l eventsource-name=workflow-cache-es -o name)
+
+#### CONTEXT GUARD ####
+check-context:
+	@[ "$$(kubectl config current-context)" = "$(EXPECTED_CONTEXT)" ] || \
+	  (echo "ERROR: wrong context. Expected $(EXPECTED_CONTEXT), got $$(kubectl config current-context)" && exit 1)
+	@echo "✓ Context verified: $$(kubectl config current-context)"
 
 #### CLUSTER ####
 build-cluster:
@@ -22,10 +29,12 @@ build-cluster-self-signed:
 build-k3d-self-signed:
 	k3d cluster create $(CLUSTER_NAME) --config ./config/k3d-cluster-self-signed.yaml
 
-delete-cluster:
+delete-cluster: check-context
+	@read -p "Delete cluster $(CLUSTER_NAME)? [y/N] " confirm && [ "$$confirm" = "y" ]
 	kind delete cluster -n $(CLUSTER_NAME)
 
-delete-k3d:
+delete-k3d: check-context
+	@read -p "Delete k3d cluster $(CLUSTER_NAME)? [y/N] " confirm && [ "$$confirm" = "y" ]
 	k3d cluster delete $(CLUSTER_NAME)
 
 #### TRUST CA ####
@@ -67,7 +76,9 @@ install-flux:
 install-flux-instance:
 	kubectl apply -f ./bootstrap/flux-operator/flux-instance.yaml -n flux-system
 
-flux-down:
+flux-down: check-context
+	@echo "Current context: $$(kubectl config current-context)"
+	@read -p "Delete flux? [y/N] " confirm && [ "$$confirm" = "y" ]
 	kubectl delete -f ./bootstrap/flux-operator/flux-instance.yaml -n flux-system || true
 	kubectl delete -f ./bootstrap/flux-operator/install.yaml -n flux-system || true
 	kubectl delete namespace flux-system || true
