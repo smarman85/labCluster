@@ -76,6 +76,9 @@ install-flux:
 install-flux-instance:
 	kubectl apply -f ./bootstrap/flux-operator/flux-instance.yaml -n flux-system
 
+install-flux-git-repo:
+	kubectl apply -f ./infra/sources/github-helm-source.yaml -n flux-system
+
 flux-down: check-context
 	@echo "Current context: $$(kubectl config current-context)"
 	@read -p "Delete flux? [y/N] " confirm && [ "$$confirm" = "y" ]
