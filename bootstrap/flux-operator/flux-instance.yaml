@@ -22,4 +22,4 @@ spec:
     kind: GitRepository
     url: "https://github.com/smarman85/labCluster"
     ref: "refs/heads/main"
-    path: "charts/kustomize/pods/overlays/qa"
+    path: "clusters/lab/flux-system"
