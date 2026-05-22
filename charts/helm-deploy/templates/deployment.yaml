@@ -9,16 +9,11 @@ spec:
   {{- end }}
   selector:
     matchLabels:
+      app: {{ .Values.name | default "test-deploy" }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       labels:
-        {{- with .Values.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+        app: {{ .Values.name | default "test-deploy" }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
