@@ -1,0 +1,355 @@
+---
+# Run locally inside your Coder workspace:
+#   ansible-playbook coder.yaml
+#
+# If ansible isn't installed yet:
+#   pip install --user ansible  OR  sudo apt install ansible -y
+
+- name: Install base workspace configs (Ubuntu)
+  hosts: localhost
+  connection: local
+  become: false
+  gather_facts: true
+
+  vars:
+    kind_version: "v0.31.0"
+    kind_install_path: /usr/local/bin/kind
+    kustomize_version: "v5.4.3"
+    arch_map:
+      x86_64: amd64
+      aarch64: arm64
+    home: "{{ ansible_facts.env.HOME }}"
+    user: "{{ ansible_facts.user_id }}"
+
+  tasks:
+
+    # ────────────────────────────────────────────────
+    # Set up Directory Structure
+    # ────────────────────────────────────────────────
+
+    - name: Ensure the personal dir exists
+      ansible.builtin.file:
+        path: "{{ home }}/Documents/repos/personal"
+        state: directory
+        mode: '0755'
+        owner: "{{ user }}"
+        group: "{{ user }}"
+
+    - name: Ensure the work dir exists
+      ansible.builtin.file:
+        path: "{{ home }}/Documents/repos/work"
+        state: directory
+        mode: '0755'
+        owner: "{{ user }}"
+        group: "{{ user }}"
+
+    # ────────────────────────────────────────────────
+    # Podman
+    # ────────────────────────────────────────────────
+
+    - name: Install dependencies
+      become: true
+      ansible.builtin.apt:
+        name:
+          - curl
+          - ca-certificates
+          - gnupg
+          - uidmap
+          - slirp4netns
+          - podman
+          - yq
+          - graphviz
+          - fzf
+        state: present
+        update_cache: true
+
+    - name: Ensure containers config dir exists
+      become: false
+      ansible.builtin.file:
+        path: "~/.config/containers"
+        state: directory
+        mode: "0755"
+
+    - name: Write containers.conf with cgroupfs manager
+      become: false
+      ansible.builtin.copy:
+        dest: "~/.config/containers/containers.conf"
+        content: |
+          [containers]
+          log_driver = "k8s-file"
+
+          [engine]
+          cgroup_manager = "cgroupfs"
+          events_logger = "file"
+          log_level = "error"
+        mode: "0644"
+
+    - name: Replace unqualified search registries
+      become: true
+      ansible.builtin.lineinfile:
+        path: /etc/containers/registries.conf
+        regexp: '^#?\s*unqualified-search-registries\s*='
+        line: 'unqualified-search-registries = ["docker.io", "quay.io", "ghcr.io"]'
+      tags: registry
+
+    # ────────────────────────────────────────────────
+    # kubelogin
+    # ────────────────────────────────────────────────
+
+    - name: Check if kubelogin is already installed
+      ansible.builtin.command: which kubelogin
+      register: kubelogin_check
+      changed_when: false
+      failed_when: false
+
+    - name: Download kubelogin zip
+      ansible.builtin.get_url:
+        url: https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
+        dest: /tmp/kubelogin-linux-amd64.zip
+        mode: "0644"
+      when: kubelogin_check.rc != 0
+
+    - name: Unzip kubelogin
+      ansible.builtin.unarchive:
+        src: /tmp/kubelogin-linux-amd64.zip
+        dest: /tmp
+        remote_src: true
+      when: kubelogin_check.rc != 0
+
+    - name: Move kubelogin to /usr/local/bin
+      become: true
+      ansible.builtin.command: mv /tmp/bin/linux_amd64/kubelogin /usr/local/bin/kubelogin
+      args:
+        creates: /usr/local/bin/kubelogin
+      when: kubelogin_check.rc != 0
+
+    - name: Remove kubelogin zip
+      ansible.builtin.file:
+        path: /tmp/kubelogin-linux-amd64.zip
+        state: absent
+      when: kubelogin_check.rc != 0
+
+    # ────────────────────────────────────────────────
+    # k3d
+    # ────────────────────────────────────────────────
+
+    - name: Check if k3d is already installed
+      ansible.builtin.command: which k3d
+      register: k3d_check
+      changed_when: false
+      failed_when: false
+
+    - name: Download k3d install script
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh
+        dest: /tmp/install_k3d.sh
+        mode: "0755"
+      when: k3d_check.rc != 0
+
+    - name: Run k3d install script
+      ansible.builtin.command: /tmp/install_k3d.sh
+      args:
+        creates: /usr/local/bin/k3d
+      when: k3d_check.rc != 0
+      environment:
+        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        GITHUB_TOKEN: "{{ lookup('env', 'GITHUB_TOKEN') }}"
+
+    - name: Remove k3d install script
+      ansible.builtin.file:
+        path: /tmp/install_k3d.sh
+        state: absent
+      when: k3d_check.rc != 0
+
+    # ────────────────────────────────────────────────
+    # kind
+    # ────────────────────────────────────────────────
+
+    - name: Detect system architecture
+      ansible.builtin.command: uname -m
+      register: uname_m
+      changed_when: false
+
+    - name: Set kind download arch
+      ansible.builtin.set_fact:
+        kind_arch: "{{ arch_map[uname_m.stdout] | default('amd64') }}"
+
+    - name: Download kind binary
+      become: true
+      ansible.builtin.get_url:
+        url: "https://kind.sigs.k8s.io/dl/{{ kind_version }}/kind-linux-{{ kind_arch }}"
+        dest: "{{ kind_install_path }}"
+        mode: "0755"
+        force: false
+
+    # ────────────────────────────────────────────────
+    # kubectl
+    # ────────────────────────────────────────────────
+
+    - name: Check if kubectl is already installed
+      ansible.builtin.command: which kubectl
+      register: kubectl_check
+      changed_when: false
+      failed_when: false
+
+    - name: Get latest kubectl version
+      ansible.builtin.uri:
+        url: https://dl.k8s.io/release/stable.txt
+        return_content: true
+      register: kubectl_version
+      when: kubectl_check.rc != 0
+
+    - name: Download kubectl
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version.content | trim }}/bin/linux/{{ kind_arch }}/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: "0755"
+      when: kubectl_check.rc != 0
+
+    # ────────────────────────────────────────────────
+    # Helm
+    # ────────────────────────────────────────────────
+
+    - name: Check if helm is already installed
+      ansible.builtin.command: which helm
+      register: helm_check
+      changed_when: false
+      failed_when: false
+
+    - name: Download helm installer script
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        dest: /tmp/get_helm.sh
+        mode: "0700"
+      when: helm_check.rc != 0
+
+    - name: Run helm installer script
+      ansible.builtin.command: /tmp/get_helm.sh
+      args:
+        creates: /usr/local/bin/helm
+      when: helm_check.rc != 0
+
+    - name: Remove helm installer script
+      ansible.builtin.file:
+        path: /tmp/get_helm.sh
+        state: absent
+      when: helm_check.rc != 0
+
+    # ────────────────────────────────────────────────
+    # Kustomize
+    # ────────────────────────────────────────────────
+
+    - name: Check if kustomize is already installed
+      ansible.builtin.command: which kustomize
+      register: kustomize_check
+      changed_when: false
+      failed_when: false
+
+    - name: Download kustomize tarball
+      ansible.builtin.get_url:
+        url: >-
+          https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F{{
+          kustomize_version }}/kustomize_{{ kustomize_version }}_linux_amd64.tar.gz
+        dest: "/tmp/kustomize_{{ kustomize_version }}_linux_amd64.tar.gz"
+        mode: "0644"
+      when: kustomize_check.rc != 0
+
+    - name: Extract and install kustomize
+      become: true
+      ansible.builtin.unarchive:
+        src: /tmp/kustomize_{{ kustomize_version }}_linux_amd64.tar.gz
+        dest: /usr/local/bin/
+      when: kustomize_check.rc != 0
+
+    # ────────────────────────────────────────────────
+    # Terraform
+    # ────────────────────────────────────────────────
+
+    - name: Check if terraform is already installed
+      ansible.builtin.command: which terraform
+      register: terraform_check
+      changed_when: false
+      failed_when: false
+
+    - name: Add HashiCorp apt signing key
+      ansible.builtin.apt_key:
+        url: https://apt.releases.hashicorp.com/gpg
+        state: present
+      when: terraform_check.rc != 0
+
+    - name: Add HashiCorp apt repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+        state: present
+        filename: hashicorp
+      when: terraform_check.rc != 0
+
+    - name: Install terraform
+      ansible.builtin.apt:
+        name: terraform
+        state: present
+        update_cache: true
+      when: terraform_check.rc != 0
+
+    # ────────────────────────────────────────────────
+    # Verify
+    # ────────────────────────────────────────────────
+
+    - name: Check podman version
+      ansible.builtin.command: podman --version
+      register: podman_ver
+      changed_when: false
+      become: false
+
+    - name: Check kubelogin version
+      ansible.builtin.command: kubelogin --version
+      register: kubelogin_ver
+      changed_when: false
+      failed_when: false
+
+    - name: Check kind version
+      ansible.builtin.command: kind version
+      register: kind_ver
+      changed_when: false
+
+    - name: Check kubectl version
+      ansible.builtin.command: kubectl version --client
+      register: kubectl_ver
+      changed_when: false
+      failed_when: false
+
+    - name: Check helm version
+      ansible.builtin.command: helm version --short
+      register: helm_ver
+      changed_when: false
+      failed_when: false
+
+    - name: Check kustomize version
+      ansible.builtin.command: kustomize version
+      register: kustomize_ver
+      changed_when: false
+      failed_when: false
+
+    - name: Check terraform version
+      ansible.builtin.command: terraform version
+      register: terraform_ver
+      changed_when: false
+      failed_when: false
+
+    - name: Check k3d version
+      ansible.builtin.command: k3d version
+      register: k3d_ver
+      changed_when: false
+      failed_when: false
+
+    - name: Print installed versions
+      ansible.builtin.debug:
+        msg:
+          - "{{ podman_ver.stdout }}"
+          - "{{ kubelogin_ver.stdout }}"
+          - "{{ kind_ver.stdout }}"
+          - "{{ kubectl_ver.stdout }}"
+          - "{{ helm_ver.stdout }}"
+          - "{{ kustomize_ver.stdout }}"
+          - "{{ terraform_ver.stdout_lines[0] }}"
+          - "{{ k3d_ver.stdout_lines[0] }}"
