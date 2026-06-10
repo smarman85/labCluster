@@ -1,0 +1,121 @@
+---
+suite: License configuration
+templates:
+  - deployment.yaml
+  - hub-license.yaml
+set:
+  image:
+    tag: v3.16.0
+tests:
+  - it: should not create secret by default
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: hub-license.yaml
+      - hasDocuments:
+          count: 1
+        template: deployment.yaml
+      - containsDocument:
+          kind: Deployment
+          apiVersion: apps/v1
+          name: RELEASE-NAME-traefik
+          namespace: NAMESPACE
+        template: deployment.yaml
+  - it: should create secret if token length is greater than 65 characters
+    set:
+      hub:
+        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: hub-token
+            secret:
+              secretName: traefik-hub-license
+        template: deployment.yaml
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: hub-token
+            mountPath: /etc/secrets
+            readOnly: true
+        template: deployment.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--hub.tokenFilePath=/etc/secrets/token"
+        template: deployment.yaml
+      - containsDocument:
+          kind: Secret
+          apiVersion: v1
+          name: traefik-hub-license
+          namespace: NAMESPACE
+        template: hub-license.yaml
+      - equal:
+          path: data.token
+          value: "ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnpkV0lpT2lJeE1qTTBOVFkzT0Rrd0lpd2libUZ0WlNJNklrcHZhRzRnUkc5bElpd2lhV0YwSWpveE5URTJNak01TURJeWZRLlNmbEt4d1JKU01lS0tGMlFUNGZ3cE1lSmYzNlBPazZ5SlZfYWRRc3N3NWM="
+        template: hub-license.yaml
+  - it: should use token value is token value is less or equal to 64 characters
+    set:
+      hub:
+        token: "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2"
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: hub-token
+            secret:
+              secretName: eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2
+        template: deployment.yaml
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: hub-token
+            mountPath: /etc/secrets
+            readOnly: true
+        template: deployment.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--hub.tokenFilePath=/etc/secrets/token"
+        template: deployment.yaml
+  - it: it should mount secret to secretMountPath
+    set:
+      hub:
+        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+        tokenMountPath: "/custom/"
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: hub-token
+            secret:
+              secretName: traefik-hub-license
+        template: deployment.yaml
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: hub-token
+            mountPath: /custom/
+            readOnly: true
+        template: deployment.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--hub.tokenFilePath=/custom/token"
+        template: deployment.yaml
+      - containsDocument:
+          kind: Secret
+          apiVersion: v1
+          name: traefik-hub-license
+          namespace: NAMESPACE
+        template: hub-license.yaml
+
+  - it: should not crash when hub.token is explicitly null
+    set:
+      hub:
+        token: null
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: hub-license.yaml
+      - hasDocuments:
+          count: 1
+        template: deployment.yaml
