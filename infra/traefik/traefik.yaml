@@ -15,6 +15,10 @@ spec:
     targetRevision: HEAD
     helm:
       values: |
+        ports:
+          traefik:
+            expose:
+              default: true
         # values.yaml
         ingressRoute:
           dashboard:
