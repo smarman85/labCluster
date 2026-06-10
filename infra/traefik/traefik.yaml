@@ -36,4 +36,8 @@ spec:
       allowEmpty: false
     syncOptions:
     - CreateNamespace=true
+  ignoreDifferences:
+  - group: kustomize.config.k8s.io
+    kind: Kustomization
+    name: "*"
   revisionHistoryLimit: 1
