@@ -103,6 +103,22 @@ argocd-ui:
 argocd-upgrade-2-10: argocd-2-10 argocd-patch-secret
 argocd-upgrade-2-11: argocd-2-11 argocd-patch-secret
 
+traefik:
+	kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
+	kubectl patch configmap argocd-cmd-params-cm -n argocd \
+		--patch '{"data":{"server.basehref":"/","server.rootpath":"/","server.insecure":"true"}}'
+	kubectl rollout restart deployment argocd-server -n argocd
+	kubectl rollout status deployment argocd-server -n argocd
+	kubectl apply -f config/argocd-traefik/traefik-updates.yaml
+
+# run where traefik is port forwarded to:
+hosts:
+	grep -qF "argocd.localhost" /etc/hosts || echo "127.0.0.1 argocd.localhost" | sudo tee -a /etc/hosts
+	grep -qF "dashboard.localhost" /etc/hosts || echo "127.0.0.1 dashboard.localhost" | sudo tee -a /etc/hosts
+
+tunnel-stop:
+	pkill -f "ssh -NfL 8080"
+
 #### ARGO WORKFLOWS ####
 argo-workflows:
 	kubectl apply -f ./bootstrap/argo-workflows/install.yaml -n argo

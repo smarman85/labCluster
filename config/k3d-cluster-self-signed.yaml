@@ -7,18 +7,19 @@ agents: 2
 image: rancher/k3s:latest
 
 ports:
-  - port: 0.0.0.0:30080:30080
-    nodeFilters:
-      - loadbalancer
-  - port: 0.0.0.0:30880:30880
-    nodeFilters:
-      - loadbalancer
-  - port: 0.0.0.0:30443:30443
-    nodeFilters:
-      - loadbalancer
-  - port: 0.0.0.0:32746:32746
-    nodeFilters:
-      - loadbalancer
+  ## Old Port forwards pre traefik
+  # - port: 0.0.0.0:30080:30080
+  # nodeFilters:
+  # - loadbalancer
+  # - port: 0.0.0.0:30880:30880
+  # nodeFilters:
+  # - loadbalancer
+  # - port: 0.0.0.0:30443:30443
+  # nodeFilters:
+  # - loadbalancer
+  # - port: 0.0.0.0:32746:32746
+  # nodeFilters:
+  # - loadbalancer
   - port: 0.0.0.0:8080:80
     nodeFilters:
       - loadbalancer
