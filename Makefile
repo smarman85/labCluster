@@ -106,7 +106,7 @@ argocd-upgrade-2-11: argocd-2-11 argocd-patch-secret
 traefik:
 	kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
 	kubectl patch configmap argocd-cmd-params-cm -n argocd \
-		--patch '{"data":{"server.basehref":"/","server.rootpath":"/","server.insecure":"true"}}'
+		--patch '{"data":{"server.insecure":"true","server.basehref":"/argocd/","server.rootpath":"/argocd/"}}'
 	kubectl rollout restart deployment argocd-server -n argocd
 	kubectl rollout status deployment argocd-server -n argocd
 	kubectl apply -f config/argocd-traefik/traefik-updates.yaml
