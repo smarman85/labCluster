@@ -106,23 +106,18 @@ argocd-upgrade-2-11: argocd-2-11 argocd-patch-secret
 traefik:
 	kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
 	kubectl patch configmap argocd-cmd-params-cm -n argocd \
-		--patch '{"data":{"server.insecure":"true","server.basehref":"/argocd/","server.rootpath":"/argocd/"}}'
-	kubectl rollout restart deployment argocd-server -n argocd
-	kubectl rollout status deployment argocd-server -n argocd
-	kubectl apply -f config/argocd-traefik/traefik-updates.yaml
-
-traefik-host:
-	kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
-	kubectl patch configmap argocd-cmd-params-cm -n argocd \
 		--patch '{"data":{"server.insecure":"true"}}'
 	kubectl rollout restart deployment argocd-server -n argocd
 	kubectl rollout status deployment argocd-server -n argocd
-	kubectl apply -f config/argocd-traefik/traefik-updates.yaml
+	kubectl apply -f config/traefik-ingress-route/traefik-dashboard.yaml
+	kubectl apply -f config/traefik-ingress-route/argocd.yaml
+	kubectl apply -f config/traefik-ingress-route/uptime-kuma.yaml
 
 # run where traefik is port forwarded to:
 hosts:
 	grep -qF "argocd.localhost" /etc/hosts || echo "127.0.0.1 argocd.localhost" | sudo tee -a /etc/hosts
 	grep -qF "dashboard.localhost" /etc/hosts || echo "127.0.0.1 dashboard.localhost" | sudo tee -a /etc/hosts
+	grep -qF "uptime.localhost" /etc/hosts || echo "127.0.0.1 uptime.localhost" | sudo tee -a /etc/hosts
 
 tunnel-stop:
 	pkill -f "ssh -NfL 8080"
