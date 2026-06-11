@@ -22,8 +22,8 @@ spec:
   entryPoints:
     - web
   routes:
-    - match: PathPrefix(`/argocd`)
-      #- match: Host(`argocd.localhost`)
+    #- match: PathPrefix(`/argocd`)
+    - match: Host(`argocd.localhost`)
       kind: Rule
       services:
         - name: argocd-server

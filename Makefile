@@ -111,6 +111,14 @@ traefik:
 	kubectl rollout status deployment argocd-server -n argocd
 	kubectl apply -f config/argocd-traefik/traefik-updates.yaml
 
+traefik-host:
+	kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
+	kubectl patch configmap argocd-cmd-params-cm -n argocd \
+		--patch '{"data":{"server.insecure":"true"}}'
+	kubectl rollout restart deployment argocd-server -n argocd
+	kubectl rollout status deployment argocd-server -n argocd
+	kubectl apply -f config/argocd-traefik/traefik-updates.yaml
+
 # run where traefik is port forwarded to:
 hosts:
 	grep -qF "argocd.localhost" /etc/hosts || echo "127.0.0.1 argocd.localhost" | sudo tee -a /etc/hosts
