@@ -19,10 +19,10 @@ ports:
   - port: 0.0.0.0:32746:32746
     nodeFilters:
       - loadbalancer
-  - port: 0.0.0.0:8080:8000
+  - port: 0.0.0.0:8080:80
     nodeFilters:
       - loadbalancer
-  - port: 0.0.0.0:8443:8443
+  - port: 0.0.0.0:8443:443
     nodeFilters:
       - loadbalancer
 
