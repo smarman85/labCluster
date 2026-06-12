@@ -113,6 +113,10 @@ traefik:
 	kubectl apply -f config/traefik-ingress-route/argocd.yaml
 	kubectl apply -f config/traefik-ingress-route/uptime-kuma.yaml
 
+chrome-tabs:
+	/mnt/c/Program\ Files\ \(x86\)/Google/Chrome/Application/chrome.exe http://dashboard.localhost:8888
+	/mnt/c/Program\ Files\ \(x86\)/Google/Chrome/Application/chrome.exe http://argocd.localhost:8888
+
 # run where traefik is port forwarded to:
 hosts:
 	grep -qF "argocd.localhost" /etc/hosts || echo "127.0.0.1 argocd.localhost" | sudo tee -a /etc/hosts
