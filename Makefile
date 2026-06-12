@@ -111,7 +111,7 @@ traefik:
 	kubectl rollout status deployment argocd-server -n argocd
 	kubectl apply -f config/traefik-ingress-route/traefik-dashboard.yaml
 	kubectl apply -f config/traefik-ingress-route/argocd.yaml
-	kubectl apply -f config/traefik-ingress-route/uptime-kuma.yaml
+	# kubectl apply -f config/traefik-ingress-route/uptime-kuma.yaml
 
 chrome-tabs:
 	/mnt/c/Program\ Files\ \(x86\)/Google/Chrome/Application/chrome.exe http://dashboard.localhost:8888
