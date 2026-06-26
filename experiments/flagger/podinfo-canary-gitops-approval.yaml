@@ -1,0 +1,43 @@
+---
+# GitOps Manual Approval - promote by committing skipAnalysis: true
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: podinfo
+  namespace: test
+spec:
+  provider: traefik
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: podinfo
+  progressDeadlineSeconds: 60
+
+  # Toggle this to true in Git to skip analysis and promote immediately
+  skipAnalysis: false
+
+  service:
+    port: 9898
+    portDiscovery: true
+
+  analysis:
+    interval: 30s
+    threshold: 5
+    iterations: 10
+    maxWeight: 0      # Blue-Green
+    stepWeight: 100
+
+    # Optional: basic health check
+    metrics:
+      - name: request-success-rate
+        thresholdRange:
+          min: 99
+        interval: 1m
+
+---
+# Approval Workflow:
+# 1. Flagger detects new version and starts canary
+# 2. Canary enters "Progressing" state
+# 3. To approve: Create PR changing skipAnalysis: true
+# 4. Merge PR → Flux applies → Flagger promotes immediately
+# 5. After promotion: Revert skipAnalysis: false for next deployment

@@ -1,0 +1,17 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: test-podinfo
+  namespace: test
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`podinfo.localhost`)
+      kind: Rule
+      services:
+        - name: podinfo
+          kind: TraefikService
+          port: 9898
+

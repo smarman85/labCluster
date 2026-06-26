@@ -1,0 +1,20 @@
+# 1. install everything
+# make flagger
+#
+# # 2. verify everything is running
+# make flagger-status
+#
+# # 3. test successful canary promotion
+# make flagger-test
+#
+# # 4. watch logs in parallel terminal
+# make flagger-logs
+#
+# # 5. test failed canary rollback
+# make flagger-test-fail
+#
+# # 6. simulate ImageUpdateAutomation mid-rollout
+# make flagger-test-imageupdateautomation
+#
+# # 7. check final state
+# make flagger-status

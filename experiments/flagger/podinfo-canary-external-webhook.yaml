@@ -1,0 +1,61 @@
+---
+# External Webhook Approval - integrate with external systems
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: podinfo
+  namespace: test
+spec:
+  provider: traefik
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: podinfo
+  progressDeadlineSeconds: 60
+
+  service:
+    port: 9898
+    portDiscovery: true
+
+  analysis:
+    interval: 30s
+    threshold: 5
+    iterations: 10
+    maxWeight: 0
+    stepWeight: 100
+
+    webhooks:
+      # Option A: GitHub PR approval
+      - name: "github-pr-approval"
+        type: confirm-promotion
+        url: https://your-approval-service.com/api/flagger/approve
+        timeout: 1h
+        metadata:
+          # Your service checks if PR is approved, returns 200 when approved
+          github_repo: "your-org/your-repo"
+          pr_labels: "deploy-approved"
+
+      # Option B: Slack approval bot
+      - name: "slack-approval"
+        type: confirm-promotion
+        url: https://your-approval-bot.com/slack/approve
+        timeout: 1h
+        metadata:
+          slack_channel: "#deployments"
+          slack_message: "Approve podinfo deployment?"
+
+      # Option C: Custom approval service with API key
+      - name: "custom-approval-api"
+        type: confirm-promotion
+        url: https://deployments.yourcompany.com/approve/podinfo
+        timeout: 1h
+        metadata:
+          auth: "Bearer ${APPROVAL_TOKEN}"
+          environment: "production"
+
+---
+# These webhooks should:
+# - Return 200 when approved
+# - Return 403 to reject/halt
+# - Return 500 or timeout to retry
+# - Can be polled every `interval` until approved or threshold reached

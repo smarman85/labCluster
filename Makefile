@@ -115,12 +115,52 @@ traefik-argocd: traefik-dashboard
 traefik-dashboard:
 	kubectl apply -f config/traefik-ingress-route/traefik-dashboard.yaml
 
+## FLAGGER
 flagger:
+	kubectl apply -f bootstrap/flagger/crd.yaml
 	kubectl apply -f bootstrap/flagger/flagger.yaml -n kube-system
+	kubectl wait --for=condition=available --timeout=60s deployment/flagger -n kube-system
 	kubectl create namespace test
 	kubectl apply -f experiments/flagger/podinfo-hpa.yaml -n test
+	kubectl wait --for=condition=available --timeout=60s deployment/podinfo -n test
 	kubectl apply -f experiments/flagger/tester.yaml -n test
+	kubectl wait --for=condition=available --timeout=60s deployment/flagger-loadtester -n test
 	kubectl apply -f experiments/flagger/podinfo-canary.yaml -n test
+	kubectl apply -f experiments/flagger/ingress-route.yaml -n test
+
+flagger-test:
+	# trigger a canary by updating the image
+	kubectl -n test set image deployment/podinfo podinfod=stefanprodan/podinfo:6.0.0
+	# watch the canary progress
+	kubectl -n test get canary/podinfo -w
+
+flagger-test-fail:
+	# trigger a canary then generate errors to test rollback
+	kubectl -n test set image deployment/podinfo podinfod=stefanprodan/podinfo:6.1.0
+	@echo "Waiting for canary to start..."
+	kubectl wait --for=jsonpath='{.status.phase}'=Progressing canary/podinfo -n test --timeout=60s
+	@echo "Generating 500 errors to trigger rollback..."
+	kubectl -n test exec -it deploy/flagger-loadtester -- \
+		hey -z 1m -c 5 -q 5 http://podinfo-canary.test:9898/status/500
+
+flagger-test-imageupdateautomation:
+	# trigger a canary then simulate ImageUpdateAutomation pushing mid-rollout
+	kubectl -n test set image deployment/podinfo podinfod=stefanprodan/podinfo:6.2.0
+	@echo "Waiting for canary to start progressing..."
+	kubectl wait --for=jsonpath='{.status.phase}'=Progressing canary/podinfo -n test --timeout=60s
+	@echo "Simulating ImageUpdateAutomation pushing a new image mid-rollout..."
+	kubectl -n test set image deployment/podinfo podinfod=stefanprodan/podinfo:6.3.0
+	@echo "Watch Flagger restart the analysis from 0..."
+	kubectl -n test get canary/podinfo -w
+
+flagger-status:
+	kubectl -n test describe canary/podinfo
+
+flagger-logs:
+	kubectl -n kube-system logs deploy/flagger -f | jq .msg
+
+flagger-clean:
+	kubectl delete namespace test
 
 chrome-tabs:
 	/mnt/c/Program\ Files\ \(x86\)/Google/Chrome/Application/chrome.exe http://dashboard.localhost:8888
@@ -131,6 +171,7 @@ hosts:
 	grep -qF "argocd.localhost" /etc/hosts || echo "127.0.0.1 argocd.localhost" | sudo tee -a /etc/hosts
 	grep -qF "dashboard.localhost" /etc/hosts || echo "127.0.0.1 dashboard.localhost" | sudo tee -a /etc/hosts
 	grep -qF "uptime.localhost" /etc/hosts || echo "127.0.0.1 uptime.localhost" | sudo tee -a /etc/hosts
+	grep -qF "podinfo.localhost" /etc/hosts || echo "127.0.0.1 podinfo.localhost" | sudo tee -a /etc/hosts
 
 tunnel-stop:
 	pkill -f "ssh -NfL 8080"

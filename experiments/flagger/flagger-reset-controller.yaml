@@ -1,0 +1,81 @@
+---
+# Alternative: Kubernetes controller to auto-reset skipAnalysis
+# This watches Canary resources and resets skipAnalysis after successful promotion
+#
+# Requires: A simple controller or CronJob that patches the Canary resource
+#
+# Option 1: CronJob (simple, checks every 5 minutes)
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: flagger-reset-skip-analysis
+  namespace: flagger-system
+spec:
+  schedule: "*/5 * * * *"  # Every 5 minutes
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: flagger-reset-sa
+          containers:
+          - name: reset
+            image: bitnami/kubectl:latest
+            command:
+            - /bin/bash
+            - -c
+            - |
+              #!/bin/bash
+              set -e
+
+              echo "Checking for canaries with skipAnalysis: true and status: Succeeded..."
+
+              # Get all canaries across all namespaces
+              CANARIES=$(kubectl get canaries --all-namespaces -o json)
+
+              # Process each canary
+              echo "$CANARIES" | jq -r '.items[] |
+                select(.spec.skipAnalysis == true and .status.phase == "Succeeded") |
+                "\(.metadata.namespace) \(.metadata.name)"' | \
+              while read -r namespace name; do
+                if [ -n "$namespace" ] && [ -n "$name" ]; then
+                  echo "Resetting skipAnalysis for $namespace/$name"
+                  kubectl patch canary "$name" -n "$namespace" \
+                    --type=merge \
+                    -p '{"spec":{"skipAnalysis":false}}'
+                fi
+              done
+
+              echo "Done"
+          restartPolicy: OnFailure
+
+---
+# ServiceAccount with permissions to read and patch Canaries
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flagger-reset-sa
+  namespace: flagger-system
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: flagger-reset-role
+rules:
+- apiGroups: ["flagger.app"]
+  resources: ["canaries"]
+  verbs: ["get", "list", "patch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: flagger-reset-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: flagger-reset-role
+subjects:
+- kind: ServiceAccount
+  name: flagger-reset-sa
+  namespace: flagger-system
