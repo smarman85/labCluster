@@ -103,15 +103,24 @@ argocd-ui:
 argocd-upgrade-2-10: argocd-2-10 argocd-patch-secret
 argocd-upgrade-2-11: argocd-2-11 argocd-patch-secret
 
-traefik:
+traefik-argocd: traefik-dashboard
 	kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
 	kubectl patch configmap argocd-cmd-params-cm -n argocd \
 		--patch '{"data":{"server.insecure":"true"}}'
 	kubectl rollout restart deployment argocd-server -n argocd
 	kubectl rollout status deployment argocd-server -n argocd
-	kubectl apply -f config/traefik-ingress-route/traefik-dashboard.yaml
 	kubectl apply -f config/traefik-ingress-route/argocd.yaml
 	# kubectl apply -f config/traefik-ingress-route/uptime-kuma.yaml
+	
+traefik-dashboard:
+	kubectl apply -f config/traefik-ingress-route/traefik-dashboard.yaml
+
+flagger:
+	kubectl apply -f bootstrap/flagger/flagger.yaml -n kube-system
+	kubectl create namespace test
+	kubectl apply -f experiments/flagger/podinfo-hpa.yaml -n test
+	kubectl apply -f experiments/flagger/tester.yaml -n test
+	kubectl apply -f experiments/flagger/podinfo-canary.yaml -n test
 
 chrome-tabs:
 	/mnt/c/Program\ Files\ \(x86\)/Google/Chrome/Application/chrome.exe http://dashboard.localhost:8888
