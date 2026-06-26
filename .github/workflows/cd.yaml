@@ -1,5 +1,4 @@
 name: cd
-
 on:
   workflow_call:
     inputs:
@@ -7,38 +6,38 @@ on:
         description: "Image tag to push to the environment"
         required: true
         type: string
-      PATH:
+      FILE_PATH:
         description: "Path of the image to update in the repo"
         required: true
         type: string
-
 permissions:
   id-token: write
-  contents: read
+  contents: write
   pull-requests: write
-
 jobs:
   tag-and-create-pr:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: update image tag
-				env:
-    			TAG: ${{ inputs.TAG }}
-    			FILE_PATH: ${{ inputs.FILE_PATH }}
+        env:
+          TAG: ${{ inputs.TAG }}
+          FILE_PATH: ${{ inputs.FILE_PATH }}
         run: |
-    			# extract image name from tag e.g. repo-name:v0.0.1 -> repo-name
-    			IMAGE_NAME=$(echo "$TAG" | sed 's|:.*||')
-    			NEW_TAG=$(echo "$TAG" | sed 's|.*:||')
-    			echo "Updating $IMAGE_NAME to $NEW_TAG in $FILE_PATH"
-    			sed -i "s|\(image: [^ ]*/${IMAGE_NAME}:\)[^ ]*|\1${NEW_TAG}|" "$FILE_PATH"
+          IMAGE_NAME=$(echo "$TAG" | sed 's|:.*||')
+          NEW_TAG=$(echo "$TAG" | sed 's|.*:||')
+          echo "Updating $IMAGE_NAME to $NEW_TAG in $FILE_PATH"
+          sed -i "s|\(image: [^ ]*/${IMAGE_NAME}:\)[^ ]*|\1${NEW_TAG}|" "$FILE_PATH"
+
       - name: create pull request
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: update image tag to ${{ inputs.TAG }}"
+          title: "Promote ${{ inputs.TAG }}"
           body: |
             - **Tag:** ${{ inputs.TAG }}
             - **File:** ${{ inputs.FILE_PATH }}
