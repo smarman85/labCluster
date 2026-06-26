@@ -20,7 +20,7 @@ jobs:
   open-pr:
     permissions:
       id-token: write
-      contents: read
+      contents: write
       packages: read
       pull-requests: write
     uses: smarman85/labCluster/.github/workflows/cd.yaml@main
