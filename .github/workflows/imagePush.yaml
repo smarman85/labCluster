@@ -1,0 +1,28 @@
+name: ImagePush
+
+on:
+  workflow_dispatch:
+    inputs:
+      imageRepoWithTag:
+        description: "Image Repository name with tag ie: (some-repo:v1.1.1)"
+        required: true
+        type: string
+      path:
+        description: "Path to the mainifest file that holds the image tag definition"
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  open-pr:
+    permissions:
+      id-token: write
+      contents: read
+      packages: read
+    uses: smarman85/labCluster/.github/workflows/cd.yaml@main
+    with:
+      TAG: ${{ inputs.imageRepoWithTag }}
+      PATH: ${{ inputs.path }}

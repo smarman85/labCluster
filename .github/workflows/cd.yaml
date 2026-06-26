@@ -1,0 +1,39 @@
+name: cd
+
+on:
+  workflow_call:
+    inputs:
+      TAG:
+        description: "Image tag to push to the environment"
+        required: true
+        type: string
+      PATH:
+        description: "Path of the image to update in the repo"
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  tag-and-create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: update image tag
+        run: |
+          sed -i "s|\(image: pue2azurecontainerregistryacr.azurecr.io/[^ ]*:\)[^ ]*|\1${{ inputs.TAG }}|" ${{ inputs.FILE_PATH }}
+      - name: create pull request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update image tag to ${{ inputs.TAG }}"
+          body: |
+            - **Tag:** ${{ inputs.TAG }}
+            - **File:** ${{ inputs.FILE_PATH }}
+          branch: promote/${{ github.run_id }}
+          base: main
