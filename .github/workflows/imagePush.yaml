@@ -7,7 +7,7 @@ on:
         description: "Image Repository name with tag ie: (some-repo:v1.1.1)"
         required: true
         type: string
-      path:
+      file_path:
         description: "Path to the mainifest file that holds the image tag definition"
         required: true
         type: string
@@ -26,4 +26,4 @@ jobs:
     uses: smarman85/labCluster/.github/workflows/cd.yaml@main
     with:
       TAG: ${{ inputs.imageRepoWithTag }}
-      PATH: ${{ inputs.path }}
+      FILE_PATH: ${{ inputs.file_path }}
