@@ -22,6 +22,7 @@ jobs:
       id-token: write
       contents: read
       packages: read
+      pull-requests: write
     uses: smarman85/labCluster/.github/workflows/cd.yaml@main
     with:
       TAG: ${{ inputs.imageRepoWithTag }}
