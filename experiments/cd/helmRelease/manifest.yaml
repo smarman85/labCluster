@@ -9,7 +9,7 @@ spec:
     replicaCount: 1
     containers:
     - name: test
-      image: somemadeupregistry.something.io/info/repo-name:v0.0.0 # {"$imagepolicy": "namespace:repo-name-image-policy"}
+      image: somemadeupregistry.something.io/info/repo-name:v.0.0.1 # {"$imagepolicy": "namespace:repo-name-image-policy"}
       ports: [8080]
       env:
         DONT: needone
