@@ -30,7 +30,7 @@ jobs:
           IMAGE_NAME=$(echo "$TAG" | sed 's|:.*||')
           NEW_TAG=$(echo "$TAG" | sed 's|.*:||')
           echo "Updating $IMAGE_NAME to $NEW_TAG in $FILE_PATH"
-          sed -i "s|\(image: [^ ]*/${IMAGE_NAME}:\)[^ ]*|\1${NEW_TAG}|" "$FILE_PATH"
+          sed -i "s|\(image: [^ ]*/${IMAGE_NAME}:\)[^ ]*|\1${NEW_TAG}|g" "$FILE_PATH"
 
       - name: create pull request
         uses: peter-evans/create-pull-request@v6
