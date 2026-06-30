@@ -16,15 +16,12 @@ on:
 permissions:
   id-token: write
   contents: read
+  packages: read
+  pull-requests: write
 
 jobs:
   promote-dev:
     name: Promote to Dev
-    permissions:
-      id-token: write
-      contents: write
-      packages: read
-      pull-requests: write
     uses: smarman85/labCluster/.github/workflows/cd.yaml@main
     with:
       TAG: ${{ inputs.imageRepoWithTag }}
@@ -34,11 +31,6 @@ jobs:
   promote-sandbox:
     name: Promote to Sandbox
     needs: [promote-dev]
-    permissions:
-      id-token: write
-      contents: write
-      packages: read
-      pull-requests: write
     uses: smarman85/labCluster/.github/workflows/cd.yaml@main
     with:
       TAG: ${{ inputs.imageRepoWithTag }}
@@ -47,11 +39,6 @@ jobs:
   promote-prod:
     name: Promote to Prod
     needs: [promote-sandbox]
-    permissions:
-      id-token: write
-      contents: write
-      packages: read
-      pull-requests: write
     uses: smarman85/labCluster/.github/workflows/cd.yaml@main
     with:
       TAG: ${{ inputs.imageRepoWithTag }}
