@@ -13,6 +13,8 @@ spec:
     path: infra/arc-runner/deployment
     repoURL: https://github.com/smarman85/labCluster.git
     targetRevision: HEAD
+    directory:
+      include: 'runnerDeployment.yaml'
   syncPolicy:
     automated:
       prune: true

@@ -20,5 +20,6 @@ spec:
       allowEmpty: false
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
   revisionHistoryLimit: 2
 
