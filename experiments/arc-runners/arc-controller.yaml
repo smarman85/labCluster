@@ -10,7 +10,7 @@ spec:
     namespace: actions-runner-system
   project: default
   source:
-    path: infra/arc-runner/ls controller/actions-runner-controller.yaml
+    path: infra/arc-runner/controller
     repoURL: https://github.com/smarman85/labCluster.git
     targetRevision: HEAD
   syncPolicy:
