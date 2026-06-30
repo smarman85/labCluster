@@ -345,6 +345,16 @@ multi-sensor-portforward:
 	kubectl -n argo-events port-forward $(WEBHOOK_MULTI) 13000:13000 &
 	kubectl -n argo-events port-forward $(WEBHOOK_MULTI) 14000:14000 &
 
+### Github arc controller
+arc-runner:
+	kubectl create namespace actions-runner-system
+	kubectl apply -f infra/arc-runner/cert-manager.yaml
+	kubectl apply -f infra/arc-runner/actions-runner-controller.yaml --server-side
+	# Need a PAT with repo scope on the runner repo
+	kubectl apply -f sensitive/arc-runner.yaml
+	kubectl apply -f infra/arc-runner/runnerDeployment.yaml
+
+
 #### INIT TARGETS ####
 init: build-cluster create-namespaces argocd-2-10 argocd-patch-secret argo-workflows argo-events
 init-basic: build-cluster create-namespaces argocd-2-10 argocd-patch-secret

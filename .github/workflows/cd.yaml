@@ -16,7 +16,10 @@ permissions:
   pull-requests: write
 jobs:
   tag-and-create-pr:
-    runs-on: ubuntu-latest
+    # Hosted by GitHub
+    # runs-on: ubuntu-latest
+    # Hosted by me in my labCluster
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
         with:
