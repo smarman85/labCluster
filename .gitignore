@@ -1,2 +1,5 @@
 *.swp
 sensitive/**
+.agents/
+skills-lock.json
+.claude/
