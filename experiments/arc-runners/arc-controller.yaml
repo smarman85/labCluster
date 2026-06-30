@@ -1,0 +1,24 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: actions-runner-controller
+  namespace: argocd
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: actions-runner-system
+  project: default
+  source:
+    path: infra/arc-runner/ls controller/actions-runner-controller.yaml
+    repoURL: https://github.com/smarman85/labCluster.git
+    targetRevision: HEAD
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+  revisionHistoryLimit: 2
+

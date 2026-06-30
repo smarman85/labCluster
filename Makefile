@@ -346,13 +346,21 @@ multi-sensor-portforward:
 	kubectl -n argo-events port-forward $(WEBHOOK_MULTI) 14000:14000 &
 
 ### Github arc controller
-arc-runner:
-	kubectl create namespace actions-runner-system
-	kubectl apply -f infra/arc-runner/cert-manager.yaml
-	kubectl apply -f infra/arc-runner/actions-runner-controller.yaml --server-side
+set-arc-secret:
 	# Need a PAT with repo scope on the runner repo
-	kubectl apply -f sensitive/arc-runner.yaml
-	kubectl apply -f infra/arc-runner/runnerDeployment.yaml
+	# kubectl create namespace actions-runner-system
+	kubectl apply -f sensitive/arc-runner.yaml -n actions-runner-system
+
+arc-runner-argocd: set-arc-secret
+	kubectl apply -f experiments/arc-runners/arc-cert-manager.yaml -n argocd
+	kubectl apply -f experiments/arc-runners/arc-controller.yaml -n argocd
+	kubectl apply -f experiments/arc-runners/runnerDeployment.yaml -n argocd
+
+arc-runner: set-arc-secret
+	kubectl create namepace cert-manager
+	kubectl apply -f infra/arc-runner/cert-manager/cert-manager.yaml -n cert-manager
+	kubectl apply -f infra/arc-runner/controller/actions-runner-controller.yaml --server-side -n actions-runner-controller
+	kubectl apply -f infra/arc-runner/deployment/runnerDeployment.yaml -n actions-runner
 
 
 #### INIT TARGETS ####
