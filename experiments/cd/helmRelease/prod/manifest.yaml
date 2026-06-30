@@ -1,0 +1,15 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: test-pr
+  namespace: test
+spec:
+  values:
+    replicaCount: 1
+    containers:
+    - name: test
+      image: somemadeupregistry.something.io/info/repo-name:v0.0.0 # {"$imagepolicy": "namespace:repo-name-image-policy"}
+      ports: [8080]
+      env:
+        DONT: needone

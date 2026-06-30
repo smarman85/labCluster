@@ -1,0 +1,59 @@
+---
+name: ImagePromote
+
+on:
+  workflow_dispatch:
+    inputs:
+      imageRepoWithTag:
+        description: "Image Repository name with tag ie: (some-repo:v1.1.1)"
+        required: true
+        type: string
+      # file_path:
+      #   description: "Path to the mainifest file that holds the image tag definition"
+      #   required: true
+      #   type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  promote-dev:
+    name: Promote to Dev
+    permissions:
+      id-token: write
+      contents: write
+      packages: read
+      pull-requests: write
+    uses: smarman85/labCluster/.github/workflows/cd.yaml@main
+    with:
+      TAG: ${{ inputs.imageRepoWithTag }}
+      #FILE_PATH: ${{ inputs.file_path }}
+      FILE_PATH: experiments/cd/helmRelease/manifest.yaml
+
+  promote-sandbox:
+    name: Promote to Sandbox
+    needs: [promote-dev]
+    permissions:
+      id-token: write
+      contents: write
+      packages: read
+      pull-requests: write
+    uses: smarman85/labCluster/.github/workflows/cd.yaml@main
+    with:
+      TAG: ${{ inputs.imageRepoWithTag }}
+      FILE_PATH: experiments/cd/helmRelease/sandbox/manifest.yaml
+
+  promote-prod:
+    name: Promote to Prod
+    needs: [promote-sandbox]
+    permissions:
+      id-token: write
+      contents: write
+      packages: read
+      pull-requests: write
+    uses: smarman85/labCluster/.github/workflows/cd.yaml@main
+    with:
+      TAG: ${{ inputs.imageRepoWithTag }}
+      FILE_PATH: experiments/cd/helmRelease/prod/manifest.yaml
+
