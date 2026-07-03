@@ -4,17 +4,12 @@ metadata:
   name: podinfo
   namespace: test
 spec:
-  # service mesh provider can be: kubernetes, istio, appmesh, nginx, gloo
   provider: traefik
-  # deployment reference
   targetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: podinfo
-  # the maximum time in seconds for the canary deployment
-  # to make progress before rollback (default 600s)
   progressDeadlineSeconds: 60
-  # HPA reference (optional)
   autoscalerRef:
     apiVersion: autoscaling/v2beta2
     kind: HorizontalPodAutoscaler
@@ -23,28 +18,25 @@ spec:
     port: 9898
     portDiscovery: true
   analysis:
-    # schedule interval (default 60s)
     interval: 30s
-    # max number of failed checks before rollback
     threshold: 2
-    # number of checks to run before rollback
     iterations: 10
-    # Prometheus checks based on 
-    # http_request_duration_seconds histogram
     metrics:
-      - name: request-success-rate
-        # minimum req success rate (non 5xx responses)
-        # percentage (0-100)
+      # names need to not be traefik reserved names
+      - name: lab-request-success-rate
+        templateRef:
+          name: traefik-request-success-rate
+          namespace: test
         thresholdRange:
           min: 99
         interval: 1m
-      - name: request-duration
-        # maximum req duration P99
-        # milliseconds
+      - name: lab-request-duration
+        templateRef:
+          name: traefik-request-duration
+          namespace: test
         thresholdRange:
           max: 500
         interval: 30s
-    # acceptance/load testing hooks
     webhooks:
       - name: smoke-test
         type: pre-rollout

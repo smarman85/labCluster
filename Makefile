@@ -126,6 +126,7 @@ flagger:
 	kubectl apply -f experiments/flagger/tester.yaml -n test
 	kubectl wait --for=condition=available --timeout=60s deployment/flagger-loadtester -n test
 	kubectl apply -f experiments/flagger/podinfo-canary.yaml -n test
+	kubectl apply -f experiments/flagger/metrics-template.yaml -n test
 	kubectl apply -f experiments/flagger/ingress-route.yaml -n test
 
 flagger-test:
@@ -133,6 +134,20 @@ flagger-test:
 	kubectl -n test set image deployment/podinfo podinfod=stefanprodan/podinfo:6.0.0
 	# watch the canary progress
 	kubectl -n test get canary/podinfo -w
+
+# run outside of coder
+flagger-traffic:
+	while true; do \
+	  curl -s -H "Host: podinfo.localhost" http://localhost:8888/ > /dev/null; \
+		sleep 0.1; \
+	done
+
+# run outside of coder
+flagger-api-tail:
+	 while true; do \
+			curl -s -H "Host: podinfo.localhost" http://localhost:8888/ | jq .version; \
+			sleep 0.5; \
+	 done
 
 flagger-test-fail:
 	# trigger a canary then generate errors to test rollback
@@ -165,6 +180,8 @@ flagger-clean:
 chrome-tabs:
 	/mnt/c/Program\ Files\ \(x86\)/Google/Chrome/Application/chrome.exe http://dashboard.localhost:8888
 	/mnt/c/Program\ Files\ \(x86\)/Google/Chrome/Application/chrome.exe http://argocd.localhost:8888
+	/mnt/c/Program\ Files\ \(x86\)/Google/Chrome/Application/chrome.exe http://prometheus.localhost:8888
+	/mnt/c/Program\ Files\ \(x86\)/Google/Chrome/Application/chrome.exe http://podinfo.localhost:8888
 
 # run where traefik is port forwarded to:
 hosts:

@@ -14,4 +14,19 @@ spec:
         - name: podinfo
           kind: TraefikService
           port: 9898
-
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus
+  namespace: kube-system
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`prometheus.localhost`)
+      kind: Rule
+      services:
+        - name: flagger-prometheus
+          namespace: kube-system
+          port: 9090

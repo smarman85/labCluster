@@ -1,0 +1,50 @@
+---
+apiVersion: flagger.app/v1beta1
+kind: MetricTemplate
+metadata:
+  name: traefik-request-success-rate
+  namespace: test
+spec:
+  provider:
+    type: prometheus
+    address: http://flagger-prometheus:9090
+  query: |
+    sum(
+      rate(
+        traefik_service_requests_total{
+          service=~"{{ namespace }}-{{ target }}-primary.*",
+          code!~"5.."
+        }[{{ interval }}]
+      )
+    )
+    /
+    sum(
+      rate(
+        traefik_service_requests_total{
+          service=~"{{ namespace }}-{{ target }}-primary.*"
+        }[{{ interval }}]
+      )
+    )
+    * 100
+---
+---
+apiVersion: flagger.app/v1beta1
+kind: MetricTemplate
+metadata:
+  name: traefik-request-duration
+  namespace: test
+spec:
+  provider:
+    type: prometheus
+    address: http://flagger-prometheus:9090
+  query: |
+    histogram_quantile(
+      0.99,
+      sum(
+        rate(
+          traefik_service_request_duration_seconds_bucket{
+            service=~"{{ namespace }}-{{ target }}-primary.*"
+          }[{{ interval }}]
+        )
+      ) by (le)
+    ) * 1000
