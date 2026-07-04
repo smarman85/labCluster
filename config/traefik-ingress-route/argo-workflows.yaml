@@ -1,0 +1,17 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: argo-workflows
+  namespace: argo
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`argo-workflows.localhost`)
+      kind: Rule
+      services:
+        - name: argo-server
+          port: 2746
+          # lab cluster only use http - no certs
+          scheme: http

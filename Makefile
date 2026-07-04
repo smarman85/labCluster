@@ -111,7 +111,10 @@ traefik-argocd: traefik-dashboard
 	kubectl rollout status deployment argocd-server -n argocd
 	kubectl apply -f config/traefik-ingress-route/argocd.yaml
 	# kubectl apply -f config/traefik-ingress-route/uptime-kuma.yaml
-	
+
+traefik-argo-workflows: argo-workflows
+	kubectl apply -f config/traefik-ingress-route/argo-workflows.yaml -n argo
+
 traefik-dashboard:
 	kubectl apply -f config/traefik-ingress-route/traefik-dashboard.yaml
 
@@ -200,7 +203,7 @@ tunnel-stop:
 #### ARGO WORKFLOWS ####
 argo-workflows:
 	kubectl apply -f ./bootstrap/argo-workflows/install.yaml -n argo
-	kubectl patch deployment argo-server --namespace argo --type='json' -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/args", "value": [ "server", "--auth-mode=server" ]}]'
+	kubectl patch deployment argo-server --namespace argo --type='json' -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/args", "value": [ "server", "--auth-mode=server", "--secure=false"]},{"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/httpGet/scheme","value":"HTTP"}]'
 
 argo-workflows-ui:
 	kubectl wait --for=condition=available deployment/argo-server -n argo --timeout=60s
