@@ -196,6 +196,7 @@ hosts:
 	grep -qF "dashboard.localhost" /etc/hosts || echo "127.0.0.1 dashboard.localhost" | sudo tee -a /etc/hosts
 	grep -qF "uptime.localhost" /etc/hosts || echo "127.0.0.1 uptime.localhost" | sudo tee -a /etc/hosts
 	grep -qF "podinfo.localhost" /etc/hosts || echo "127.0.0.1 podinfo.localhost" | sudo tee -a /etc/hosts
+	grep -qF "argo-workflows.localhost" /etc/hosts || echo "127.0.0.1 argo-workflows.localhost" | sudo tee -a /etc/hosts
 
 tunnel-stop:
 	pkill -f "ssh -NfL 8080"
