@@ -130,7 +130,7 @@ flagger:
 	kubectl wait --for=condition=available --timeout=60s deployment/flagger-loadtester -n test
 	kubectl apply -f experiments/flagger/podinfo-canary.yaml -n test
 	kubectl apply -f experiments/flagger/metrics-template.yaml -n test
-	kubectl apply -f experiments/flagger/ingress-route.yaml -n test
+	kubectl apply -f experiments/flagger/ingress-route.yaml
 
 flagger-test:
 	# trigger a canary by updating the image
