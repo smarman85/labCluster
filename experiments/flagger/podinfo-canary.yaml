@@ -20,7 +20,7 @@ spec:
   analysis:
     interval: 30s
     threshold: 2
-    iterations: 10
+    iterations: 6
     metrics:
       # names need to not be traefik reserved names
       - name: lab-request-success-rate

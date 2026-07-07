@@ -4,25 +4,12 @@ metadata:
   name: lab
 servers: 1
 agents: 2
-image: rancher/k3s:latest
+image: rancher/k3s:v1.34.1-k3s1
 kubeAPI:
   host: "127.0.0.1"
   hostPort: "6445"
 
 ports:
-  ## Old Port forwards pre traefik
-  # - port: 0.0.0.0:30080:30080
-  # nodeFilters:
-  # - loadbalancer
-  # - port: 0.0.0.0:30880:30880
-  # nodeFilters:
-  # - loadbalancer
-  # - port: 0.0.0.0:30443:30443
-  # nodeFilters:
-  # - loadbalancer
-  # - port: 0.0.0.0:32746:32746
-  # nodeFilters:
-  # - loadbalancer
   - port: 0.0.0.0:8080:80
     nodeFilters:
       - loadbalancer
@@ -38,6 +25,6 @@ volumes:
 options:
   k3s:
     extraArgs:
-      - arg: --node-label=ingress-ready=true
+      - arg: --disable=traefik
         nodeFilters:
           - server:0
