@@ -18,11 +18,11 @@ spec:
     portDiscovery: true
 
   analysis:
-    interval: 30s
+    interval: 15s
     threshold: 5
     iterations: 10
-    maxWeight: 0
-    stepWeight: 100
+    maxWeight: 15
+    stepWeight: 50
 
     webhooks:
       # Option A: GitHub PR approval
