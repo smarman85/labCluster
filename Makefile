@@ -126,6 +126,7 @@ traefik-dashboard:
 ## FLAGGER
 flagger:
 	kubectl apply -f bootstrap/flagger/crd.yaml
+	### The following forwards traffic to the default installed prometheus
 	kubectl apply -f bootstrap/flagger/flagger.yaml -n kube-system
 	kubectl wait --for=condition=available --timeout=60s deployment/flagger -n kube-system
 	kubectl create namespace test

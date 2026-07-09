@@ -12,7 +12,7 @@ spec:
     sum(
       rate(
         traefik_service_requests_total{
-          service=~"{{ namespace }}-{{ target }}-primary.*",
+          service=~"{{ namespace }}-{{ target }}-.*",
           code!~"5.."
         }[{{ interval }}]
       )
@@ -21,7 +21,7 @@ spec:
     sum(
       rate(
         traefik_service_requests_total{
-          service=~"{{ namespace }}-{{ target }}-primary.*"
+          service=~"{{ namespace }}-{{ target }}-.*"
         }[{{ interval }}]
       )
     )
@@ -43,7 +43,7 @@ spec:
       sum(
         rate(
           traefik_service_request_duration_seconds_bucket{
-            service=~"{{ namespace }}-{{ target }}-primary.*"
+            service=~"{{ namespace }}-{{ target }}-.*"
           }[{{ interval }}]
         )
       ) by (le)

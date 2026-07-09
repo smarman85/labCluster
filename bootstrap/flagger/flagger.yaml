@@ -679,6 +679,10 @@ spec:
           args:
             - '--storage.tsdb.retention.time=2h'
             - '--config.file=/etc/prometheus/prometheus.yml'
+            ### Used to send prometheus traffic to the other installed prometheus
+            ### Installed by default in the lab cluster
+            - '--web.external-url=http://prometheus.localhost:8888'
+            - '--web.route-prefix=/'
           ports:
             - containerPort: 9090
               name: http
