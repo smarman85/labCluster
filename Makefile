@@ -73,10 +73,10 @@ create-namespace-flux:
 	kubectl create namespace flux-system
 
 install-flux:
-	kubectl apply -f ./bootstrap/flux-operator/install.yaml -n flux-system
+	kubectl apply -f ./bootstrap/flux-operator/0.49.0/install.yaml -n flux-system
 
 install-flux-instance:
-	kubectl apply -f ./bootstrap/flux-operator/flux-instance.yaml -n flux-system
+	kubectl apply -f ./bootstrap/flux-operator/0.49.0/flux-instance.yaml -n flux-system
 
 install-flux-git-repo:
 	kubectl apply -f ./infra/sources/github-helm-source.yaml -n flux-system
@@ -87,6 +87,24 @@ flux-down: check-context
 	kubectl delete -f ./bootstrap/flux-operator/flux-instance.yaml -n flux-system || true
 	kubectl delete -f ./bootstrap/flux-operator/install.yaml -n flux-system || true
 	kubectl delete namespace flux-system || true
+
+upgrade-flux:
+	kubectl apply -f ./bootstrap/flux-operator/0.50.0/install.yaml -n flux-system
+
+upgrade-flux-instance:
+	kubectl apply -f ./bootstrap/flux-operator/0.50.0/flux-instance.yaml -n flux-system
+
+upgrade-flux-55:
+	kubectl apply -f ./bootstrap/flux-operator/0.55.0/install.yaml -n flux-system
+
+upgrade-flux-instance-55:
+	kubectl apply -f ./bootstrap/flux-operator/0.55.0/flux-instance.yaml -n flux-system
+
+upgrade-flux-bad:
+	kubectl apply -f ./bootstrap/flux-operator/bad/install.yaml -n flux-system
+
+upgrade-flux-instance-bad:
+	kubectl apply -f ./bootstrap/flux-operator/bad/flux-instance.yaml -n flux-system
 
 #### ARGOCD ####
 argocd-core:
