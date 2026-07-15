@@ -12,6 +12,14 @@ spec:
     version: "2.x"
     registry: "ghcr.io/fluxcd"
     artifact: "oci://ghcr.io/controlplaneio-fluxcd/flux-operator-manifests:v0.49.0"
+  components:
+    - source-controller
+    - source-watcher
+    - kustomize-controller
+    - helm-controller
+    - notification-controller
+    - image-reflector-controller
+    - image-automation-controller
   cluster:
     type: kubernetes
     size: small
