@@ -88,6 +88,9 @@ flux-down: check-context
 	kubectl delete -f ./bootstrap/flux-operator/install.yaml -n flux-system || true
 	kubectl delete namespace flux-system || true
 
+flux-ui:
+	kubectl apply -f ./infra/flux-ui/ingressroute.yaml
+
 upgrade-flux:
 	kubectl apply -f ./bootstrap/flux-operator/0.50.0/install.yaml -n flux-system
 
@@ -107,8 +110,11 @@ upgrade-flux-instance-bad:
 	kubectl apply -f ./bootstrap/flux-operator/bad/flux-instance.yaml -n flux-system
 
 #### ARGOCD ####
-argocd-core:
+argocd-core: argocd-core-defaults
 	kubectl apply -f bootstrap/argo-core/core-install.yaml -n argocd --server-side
+
+argocd-core-defaults:
+	kubectl apply -f bootstrap/argocd/AppProject-default.yaml
 
 argocd-2-10:
 	kubectl apply -f ./bootstrap/argocd/install-2.10.yaml -n argocd
