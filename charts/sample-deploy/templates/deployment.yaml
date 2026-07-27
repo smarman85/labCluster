@@ -7,6 +7,8 @@ spec:
   replicas: {{ .Values.replicaCount | default 1 }}
   {{- end }}
   selector:
+    matchLabels:
+      app: {{ .Values.name | default "default" }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -14,6 +16,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
+        app: {{ .Values.name | default "default" }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
