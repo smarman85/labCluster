@@ -72,10 +72,10 @@ flux-up: create-namespace-flux install-flux install-flux-instance
 create-namespace-flux:
 	kubectl create namespace flux-system
 
-install-flux:
-	kubectl apply -f ./bootstrap/flux-operator/0.49.0/install.yaml -n flux-system
+install-flux: upgrade-flux-55 upgrade-flux-instance-55
+	#kubectl apply -f ./bootstrap/flux-operator/0.49.0/install.yaml -n flux-system
 
-install-flux-instance:
+install-flux-instance: upgrade-flux-55
 	kubectl apply -f ./bootstrap/flux-operator/0.49.0/flux-instance.yaml -n flux-system
 
 install-flux-git-repo:
@@ -128,6 +128,10 @@ argocd-patch-secret:
 argocd-ui:
 	kubectl wait --for=condition=available deployment/argocd-server -n argocd --timeout=60s
 	open /Applications/Google\ Chrome.app/ "https://0.0.0.0:30080/applications"
+
+argocd-exec:
+	kubectl patch configmap argocd-cm -n argocd --type merge -p '{"data": {"exec.enabled": "true"}}'
+	kubectl rollout restart deployment/argocd-repo-server -n argocd
 
 argocd-upgrade-2-10: argocd-2-10 argocd-patch-secret
 argocd-upgrade-2-11: argocd-2-11 argocd-patch-secret
@@ -409,9 +413,9 @@ multi-sensor-portforward:
 	kubectl -n argo-events port-forward $(WEBHOOK_MULTI) 14000:14000 &
 
 ### Github arc controller
-set-arc-secret:
+set-arc-secret: 
 	# Need a PAT with repo scope on the runner repo
-	# kubectl create namespace actions-runner-system
+	kubectl create namespace actions-runner-system
 	kubectl apply -f sensitive/arc-runner.yaml -n actions-runner-system
 
 arc-runner-argocd: set-arc-secret

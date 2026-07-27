@@ -1,0 +1,27 @@
+# ============================================================
+# ARGOCD - Application (creates namespace automatically)
+# ============================================================
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-argocd
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/smarman85/labCluster
+    targetRevision: main
+    path: charts/sample-deploy
+    helm:
+      values: |
+        name: app-argocd
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: app-argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

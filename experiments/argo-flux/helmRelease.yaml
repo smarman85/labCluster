@@ -1,0 +1,26 @@
+
+# ============================================================
+# FLUX - Namespace + HelmRelease
+# ============================================================
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: app-flux
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: app-flux
+  namespace: app-flux
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: charts/sample-deploy
+      sourceRef:
+        kind: GitRepository
+        name: lab-charts
+        namespace: flux-system
+  values:
+    name: app-flux
