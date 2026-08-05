@@ -429,6 +429,13 @@ arc-runner: set-arc-secret
 	kubectl apply -f infra/arc-runner/controller/actions-runner-controller.yaml --server-side -n actions-runner-controller
 	kubectl apply -f infra/arc-runner/deployment/runnerDeployment.yaml -n actions-runner
 
+### Kargo
+kargo:
+	kubectl apply -f experiments/arc-runners/arc-cert-manager.yaml -n argocd
+	kubectl apply -f infra/kargo/kargo.yaml
+	kubectl apply -f infra/kargo/ingressRoute.yaml
+
+
 
 #### INIT TARGETS ####
 init: build-cluster create-namespaces argocd-2-10 argocd-patch-secret argo-workflows argo-events
