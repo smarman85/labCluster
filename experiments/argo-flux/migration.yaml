@@ -1,0 +1,24 @@
+# ============================================================
+# ARGO - Application (adopts existing app-flux helm release)
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-flux
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/smarman85/labCluster
+    targetRevision: main
+    path: charts/sample-deploy
+    helm:
+      releaseName: app-flux    # must match existing helm release name exactly
+      values: |
+        name: app-flux
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: app-flux
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false  # namespace already exists, don't touch it

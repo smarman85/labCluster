@@ -18,3 +18,30 @@
 #
 # # 7. check final state
 # make flagger-status
+#
+
+
+
+
+# Argocd Migration steps:
+cat experiments/argo-flux/helmRelease.yaml
+k apply -f experiments/argo-flux/helmRelease.yaml
+helm list -n app-flux
+k get pods -n app-flux
+# Get the GitRepository source URL - need this for ArgoCD repoURL\nkubectl get gitrepository lab-charts -n flux-system -o yaml | grep -E "url:|branch:|ref:"
+vim experiments/argo-flux/migration.yaml
+flux suspend helmrelease app-flux -n app-flux
+k get pods -n app-flux
+k apply -f experiments/argo-flux/migration.yaml
+argocd app sync app-flux --dry-run
+k get svc -n argocd | grep argocd-server\n
+argocd login 172.18.0.2:30443 \\n  --username admin \\n  --password admin \\n  --insecure
+argocd app sync app-flux --dry-run
+argocd app diff app-flux
+argocd app sync app-flux
+argocd app get app-flux
+helm list -n app-flux
+k get pods -n app-flux
+#clean up
+k delete helmrelease app-flux -n app-flux
+k delete gitrepository lab-charts -n flux-system
