@@ -139,6 +139,13 @@ argocd-upgrade-2-11: argocd-2-11 argocd-patch-secret
 #### Traefik manual install ####
 traefik-manual:
 	kubectl apply -f ./infra/gateway-api/1-2-0/standard-install.yaml
+	# hack to get around race condition
+	# TODO: apply crds first
+	kubectl apply -f ./charts/rendered/traefik/manifest.yaml -n traefik || true
+	kubectl wait --for=condition=established --timeout=60s \
+		crd/ingressroutes.traefik.io \
+		crd/ingressroutetcps.traefik.io \
+		crd/middlewares.traefik.io
 	kubectl apply -f ./charts/rendered/traefik/manifest.yaml -n traefik
 
 traefik-template:
