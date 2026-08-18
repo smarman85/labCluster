@@ -65,9 +65,11 @@ create-namespaces:
 	kubectl create namespace argo-events
 	kubectl create namespace monitoring
 	kubectl create namespace traefik
+	kubectl create namespace flux-system
+	kubectl create namespace cluster-config
 
 #### FLUX ####
-flux-up: create-namespace-flux install-flux install-flux-instance
+flux-up: create-namespace-flux install-flux install-flux-instance flux-ui
 
 create-namespace-flux:
 	kubectl create namespace flux-system
@@ -108,6 +110,13 @@ upgrade-flux-bad:
 
 upgrade-flux-instance-bad:
 	kubectl apply -f ./bootstrap/flux-operator/bad/flux-instance.yaml -n flux-system
+
+# Flux argo r-ollouts:
+flux-rollouts:
+	kubectl apply -f ./experiments/fluxcd/rollouts-bg/blue-green.yaml
+
+flux-rollouts-ui:
+	kubectl apply -f ./config/traefik-ingress-route/argo-rollouts.yaml
 
 #### ARGOCD ####
 argocd-core: argocd-core-defaults
