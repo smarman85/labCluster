@@ -346,6 +346,12 @@ rollouts-watch:
 rollout-deploy-yellow:
 	kubectl argo rollouts set image rollout-bluegreen rollouts-demo=argoproj/rollouts-demo:yellow -n blue-green
 
+rollout-deploy-green:
+	kubectl argo rollouts set image rollout-bluegreen rollouts-demo=argoproj/rollouts-demo:green -n blue-green
+
+rollout-deploy-blue:
+	kubectl argo rollouts set image rollout-bluegreen rollouts-demo=argoproj/rollouts-demo:blue -n blue-green
+
 rollout-svcs-active:
 	kubectl port-forward svc/rollout-bluegreen-active -n blue-green 13001:80 &
 
@@ -358,6 +364,10 @@ rollouts-dashboard:
 
 rollout-promote:
 	kubectl argo rollouts promote rollout-bluegreen -n blue-green
+
+rollout-abort:
+	kubectl argo rollouts abort rollout-bluegreen -n blue-green
+
 
 ## CI
 ci:
