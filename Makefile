@@ -68,6 +68,61 @@ create-namespaces:
 	kubectl create namespace flux-system
 	kubectl create namespace cluster-config
 
+create-namespaces-argo:
+	kubectl create namespace argocd
+
+bootstrap-argo: argocd-upgrade-2-11
+bootstrap-argo: argocd-upgrade-2-11
+	@echo "Waiting for ArgoCD to be ready..."
+	kubectl wait --for=condition=available --timeout=300s \
+		deployment/argocd-server \
+		deployment/argocd-repo-server \
+		-n argocd
+	kubectl wait --for=condition=ready pod \
+		-l app.kubernetes.io/name=argocd-application-controller \
+		--timeout=300s \
+		-n argocd
+
+	@echo "Applying gateway-api Application..."
+	kubectl apply -f ./experiments/gateway-api/gateway-api.yaml
+
+	@echo "Waiting for gateway-api to sync..."
+	kubectl wait --for=jsonpath='{.status.sync.status}'=Synced \
+		application/gateway-api \
+		--timeout=120s \
+		-n argocd
+	kubectl wait --for=jsonpath='{.status.health.status}'=Healthy \
+		application/gateway-api \
+		--timeout=120s \
+		-n argocd
+
+	@echo "Waiting for gateway-api CRDs to establish..."
+	kubectl wait --for=condition=established --timeout=120s \
+		crd/gateways.gateway.networking.k8s.io \
+		crd/httproutes.gateway.networking.k8s.io \
+		crd/referencegrants.gateway.networking.k8s.io
+
+	@echo "Applying traefik Application..."
+	kubectl apply -f ./experiments/traefik/traefik.yaml
+
+	@echo "Waiting for traefik to sync..."
+	kubectl wait --for=jsonpath='{.status.sync.status}'=Synced \
+		application/traefik \
+		--timeout=120s \
+		-n argocd
+	kubectl wait --for=jsonpath='{.status.health.status}'=Healthy \
+		application/traefik \
+		--timeout=120s \
+		-n argocd
+
+	@echo "Waiting for Traefik CRDs to establish..."
+	kubectl wait --for=condition=established --timeout=120s \
+		crd/ingressroutes.traefik.io \
+		crd/ingressroutetcps.traefik.io \
+		crd/middlewares.traefik.io
+
+	@echo "Done — check ArgoCD UI for sync status"
+
 #### FLUX ####
 flux-up: create-namespace-flux install-flux install-flux-instance flux-ui
 
@@ -263,6 +318,30 @@ tunnel-stop:
 argo-workflows:
 	kubectl apply -f ./bootstrap/argo-workflows/install.yaml -n argo
 	kubectl patch deployment argo-server --namespace argo --type='json' -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/args", "value": [ "server", "--auth-mode=server", "--secure=false"]},{"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/httpGet/scheme","value":"HTTP"}]'
+
+argo-workflows-app:
+	kubectl apply -f ./experiments/argo-workflows/argo-workflows.yaml
+
+	@echo "Waiting for argo-workflows to sync..."
+	kubectl wait --for=jsonpath='{.status.sync.status}'=Synced \
+		application/argo-workflows \
+		--timeout=120s \
+		-n argocd
+
+	@echo "Waiting for argo namespace..."
+	kubectl wait --for=jsonpath='{.status.phase}'=Active \
+		namespace/argo \
+		--timeout=60s
+
+	@echo "Waiting for argo-server deployment..."
+	kubectl wait --for=condition=available --timeout=120s \
+		deployment/argo-server \
+		-n argo
+
+	kubectl patch deployment argo-server \
+		--namespace argo \
+		--type='json' \
+		-p='[{"op": "replace", "path": "/spec/template/spec/containers/0/args", "value": ["server", "--auth-mode=server", "--secure=false"]},{"op": "replace", "path": "/spec/template/spec/containers/0/readinessProbe/httpGet/scheme", "value": "HTTP"}]'
 
 argo-workflows-ui:
 	kubectl wait --for=condition=available deployment/argo-server -n argo --timeout=60s
@@ -470,6 +549,7 @@ init-self-signed-docker: build-cluster-self-signed trust-ca create-namespaces ar
 init-self-signed-podman: build-cluster-self-signed trust-ca-podman create-namespaces argocd-2-10 argocd-patch-secret argo-workflows argo-events
 init-self-signed-k3d-podman: build-k3d-self-signed create-namespaces traefik-manual trust-ca-k3d-podman
 init-self-signed-k3d-docker: build-k3d-self-signed create-namespaces traefik-manual trust-ca-k3d
+init-self-signed-k3d-argo: build-k3d-self-signed create-namespaces-argo bootstrap-argo trust-ca-k3d traefik-argocd
 init-k3d-podman: build-k3d # trust-ca-k3d-podman
 init-k3d-docker: build-k3d # trust-ca-k3d
 init-flux: build-k3d trust-ca-k3d flux-up
