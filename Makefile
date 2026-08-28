@@ -412,6 +412,9 @@ ollama:
 
 #### EXPERIMENTS ####
 ## Blue-Green Rollouts
+argo-rollouts-app:
+	kubectl apply -f ./experiments/argo-rollouts/argo-rollouts.yaml
+
 rollout-infra:
 	kubectl create ns argo-rollouts
 	kubectl apply -f ./bootstrap/argo-rollouts/install.yaml
