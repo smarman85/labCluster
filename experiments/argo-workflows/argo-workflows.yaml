@@ -10,6 +10,7 @@ spec:
     repoURL: https://github.com/smarman85/labCluster
     targetRevision: main
     path: bootstrap/argo-workflows
+    kustomize: {}
   destination:
     server: https://kubernetes.default.svc
     namespace: argo
