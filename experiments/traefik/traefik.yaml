@@ -13,6 +13,14 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: traefik
+  # This is a known ArgoCD issue with newer Kubernetes versions. The ipMode field was added to the 
+  # LoadBalancer status in Kubernetes 1.30+ but ArgoCD's bundled OpenAPI schema doesn't know about
+  # it yet — so it can't calculate the diff and marks the app as Unknown.
+  ignoreDifferences:
+    - group: ""
+      kind: Service
+      jsonPointers:
+        - /status/loadBalancer/ingress
   syncPolicy:
     automated:
       prune: true
