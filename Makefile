@@ -348,6 +348,9 @@ argo-workflows-ui:
 	open /Applications/Google\ Chrome.app/ "https://0.0.0.0:32746/workflows/undefined?&limit=50"
 
 #### ARGO EVENTS ####
+argo-events-app:
+	kubectl apply -f ./experiments/argo-events-app/argo-events.yaml
+
 argo-events:
 	kubectl apply -f ./bootstrap/argo-events/install.yaml -n argo-events
 	kubectl apply -n argo-events -f ./bootstrap/argo-events/native.yaml
