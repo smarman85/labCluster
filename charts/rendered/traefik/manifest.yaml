@@ -8797,6 +8797,7 @@ spec:
         - --providers.kubernetesgateway.statusaddress.service.namespace=traefik
         - --entryPoints.websecure.http.tls=true
         - --log.level=INFO
+        - --providers.kubernetescrd.allowCrossNamespace=true
         env:
         - name: POD_NAME
           valueFrom:
@@ -8941,3 +8942,18 @@ spec:
     services:
       - kind: TraefikService
         name: api@internal
+---
+# Source: traefik/templates/tlsstore.yaml
+apiVersion: traefik.io/v1alpha1
+kind: TLSStore
+metadata:
+  name: default
+  namespace: traefik
+  labels:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: release-name-traefik
+    helm.sh/chart: traefik-40.3.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  defaultCertificate:
+    secretName: traefik-default-cert

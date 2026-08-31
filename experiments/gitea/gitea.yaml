@@ -13,6 +13,13 @@ spec:
     path: charts/gitea
     repoURL: https://github.com/smarman85/labCluster.git
     targetRevision: HEAD
+    helm:
+      values: |
+        gitea:
+          admin:
+            username: "gitea-admin"
+            password: "admin1234"
+            email: "gitea-admin@noreply.com"
   syncPolicy:
     automated:
       prune: true

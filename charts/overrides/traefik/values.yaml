@@ -12,3 +12,11 @@ gateway:
     web:
       namespacePolicy:
         from: All
+
+additionalArguments:
+  - "--providers.kubernetescrd.allowCrossNamespace=true"
+
+tlsStore:
+  default:
+    defaultCertificate:
+      secretName: traefik-default-cert

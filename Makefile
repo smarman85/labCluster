@@ -58,6 +58,17 @@ trust-ca-k3d-podman:
 		podman exec $$node sh -c "cat /usr/local/share/ca-certificates/corporate.crt >> /etc/ssl/certs/ca-certificates.crt"; \
 	done
 
+# Install mkcerts
+install-certs:
+	mkcert -install
+	mkdir -p sensitive
+	cd sensitive && mkcert "*.localhost" "localhost" "127.0.0.1"
+	kubectl create secret tls traefik-default-cert \
+		--cert=sensitive/_wildcard.localhost+2.pem \
+		--key=sensitive/_wildcard.localhost+2-key.pem \
+		-n traefik \
+		--dry-run=client -o yaml | kubectl apply -f -
+
 #### NAMESPACES ####
 create-namespaces:
 	kubectl create namespace argo
@@ -361,6 +372,8 @@ argocd-notifications:
 	kubectl apply -n argocd -f ./bootstrap/argocd/notifications.yaml
 	kubectl apply -n argocd -f ./bootstrap/argocd/triggers.yaml
 
+argo-extras: argo-workflows-app argo-events-app
+
 #### INGRESS ####
 ingress:
 	kubectl apply -f ./bootstrap/ingress-nginx/deploy.yaml
@@ -546,6 +559,9 @@ kargo:
 	kubectl apply -f infra/kargo/kargo.yaml
 	kubectl apply -f infra/kargo/ingressRoute.yaml
 
+
+gitea:
+	kubectl apply -f experiments/gitea/gitea.yaml
 
 
 #### INIT TARGETS ####
