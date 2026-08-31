@@ -372,7 +372,36 @@ argocd-notifications:
 	kubectl apply -n argocd -f ./bootstrap/argocd/notifications.yaml
 	kubectl apply -n argocd -f ./bootstrap/argocd/triggers.yaml
 
-argo-extras: argo-workflows-app argo-events-app
+argo-extras: argo-workflows-app argo-events-app argo-rollouts-app 
+
+kargo:
+	@echo "Applying kargo Application..."
+	kubectl apply -f ./experiments/kargo/manifest.yaml
+
+	@echo "Waiting for kargo to sync..."
+	kubectl wait --for=jsonpath='{.status.sync.status}'=Synced \
+		application/kargo \
+		--timeout=120s \
+		-n argocd
+
+	@echo "Waiting for kargo namespace..."
+	kubectl wait --for=jsonpath='{.status.phase}'=Active \
+		namespace/kargo \
+		--timeout=60s
+
+	@echo "Waiting for kargo to be healthy..."
+	kubectl wait --for=jsonpath='{.status.health.status}'=Healthy \
+		application/kargo \
+		--timeout=120s \
+		-n argocd
+
+	@echo "Applying kargo IngressRoute..."
+	kubectl apply -f infra/kargo/ingressRoute.yaml
+
+	@echo "Kargo ready ✓"
+
+kargo-ingress:
+	kubectl apply -f infra/kargo/ingressRoute.yaml
 
 #### INGRESS ####
 ingress:
@@ -552,13 +581,6 @@ arc-runner: set-arc-secret
 	kubectl apply -f infra/arc-runner/cert-manager/cert-manager.yaml -n cert-manager
 	kubectl apply -f infra/arc-runner/controller/actions-runner-controller.yaml --server-side -n actions-runner-controller
 	kubectl apply -f infra/arc-runner/deployment/runnerDeployment.yaml -n actions-runner
-
-### Kargo
-kargo:
-	kubectl apply -f experiments/arc-runners/arc-cert-manager.yaml -n argocd
-	kubectl apply -f infra/kargo/kargo.yaml
-	kubectl apply -f infra/kargo/ingressRoute.yaml
-
 
 gitea:
 	kubectl apply -f experiments/gitea/gitea.yaml
