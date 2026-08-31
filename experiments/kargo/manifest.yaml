@@ -1,0 +1,28 @@
+# experiments/kargo/kargo.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kargo
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: ghcr.io/akuity/kargo-charts
+    chart: kargo
+    targetRevision: "*"
+    helm:
+      valuesObject:
+        api:
+          adminAccount:
+            passwordHash: '$2y$10$QqXJ8EerhwBf.B1qdMLF9ehJY7m2Eot3BH9auBcZz9GTh32WX.9mi'
+            tokenSigningKey: 'SkZcGAw+VjIoK1sFmsZjBAbjtP8gsleYMKXvPjSHht4='
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kargo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
