@@ -457,3 +457,10 @@ kubectl exec -it -n gitea \
 curl -u gitea-admin:admin1234 \
   http://gitea.localhost:8080/api/v1/repos/search | python3 -m json.tool | grep full_name
 ```
+
+
+```bash
+docker login gitea.localhost:8443
+docker tag myimage gitea.localhost:8443/gitea-admin/myimage:tag
+docker push gitea.localhost:8443/gitea-admin/myimage:tag
+```

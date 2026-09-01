@@ -21,6 +21,8 @@ spec:
             password: "admin1234"
             email: "gitea-admin@noreply.com"
           config:
+            server:
+              ROOT_URL: 'http://gitea.localhost:8080'
             packages:
               ENABLED: true
         service:
