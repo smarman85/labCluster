@@ -585,6 +585,9 @@ arc-runner: set-arc-secret
 gitea:
 	kubectl apply -f experiments/gitea/gitea.yaml
 
+gitea-runner:
+	kubectl apply -f experiments/gitea/runner.yaml
+
 
 #### INIT TARGETS ####
 init: build-cluster create-namespaces argocd-2-10 argocd-patch-secret argo-workflows argo-events

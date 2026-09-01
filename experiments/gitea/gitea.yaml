@@ -14,12 +14,17 @@ spec:
     repoURL: https://github.com/smarman85/labCluster.git
     targetRevision: HEAD
     helm:
-      values: |
+      valuesObject:
         gitea:
           admin:
             username: "gitea-admin"
             password: "admin1234"
             email: "gitea-admin@noreply.com"
+        service:
+          ssh:
+            type: NodePort
+            port: 22
+            nodePort: 30022
   syncPolicy:
     automated:
       prune: true

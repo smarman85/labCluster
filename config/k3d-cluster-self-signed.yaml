@@ -16,6 +16,9 @@ ports:
   - port: 0.0.0.0:8443:443
     nodeFilters:
       - loadbalancer
+  - port: 0.0.0.0:2222:30022
+    nodeFilters:
+      - loadbalancer
 
 volumes:
   - volume: ${PWD}/sensitive/corp-self-signed.crt:/usr/local/share/ca-certificates/corporate.crt
