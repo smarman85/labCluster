@@ -20,6 +20,9 @@ spec:
             username: "gitea-admin"
             password: "admin1234"
             email: "gitea-admin@noreply.com"
+          config:
+            packages:
+              ENABLED: true
         service:
           ssh:
             type: NodePort
