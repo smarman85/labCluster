@@ -582,11 +582,19 @@ arc-runner: set-arc-secret
 	kubectl apply -f infra/arc-runner/controller/actions-runner-controller.yaml --server-side -n actions-runner-controller
 	kubectl apply -f infra/arc-runner/deployment/runnerDeployment.yaml -n actions-runner
 
+# GITEA
 gitea:
 	kubectl apply -f experiments/gitea/gitea.yaml
 
 gitea-runner:
 	kubectl apply -f experiments/gitea/runner.yaml
+
+gitea-registry-secret:
+	kubectl create secret docker-registry gitea-registry \
+		--docker-server=gitea-http.gitea.svc.cluster.local:3000 \
+		--docker-username=gitea-admin \
+		--docker-password=admin1234 \
+		-n default
 
 
 #### INIT TARGETS ####
