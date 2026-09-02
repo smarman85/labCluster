@@ -26,7 +26,7 @@ spec:
             tag: "3.0.2"
           dind:
             tag: "29.7.1-dind"
-      			extraVolumeMounts:
+            extraVolumeMounts:
               - name: docker-daemon-config
                 mountPath: /etc/docker/daemon.json
                 subPath: daemon.json
