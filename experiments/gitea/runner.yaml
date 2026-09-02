@@ -22,6 +22,8 @@ spec:
             tag: "3.0.2"
           dind:
             tag: "29.7.1-dind"
+            extraArgs:
+              - "--insecure-registry=gitea-http.gitea.svc.cluster.local:3000"
   destination:
     server: https://kubernetes.default.svc
     namespace: gitea
