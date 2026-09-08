@@ -597,14 +597,20 @@ gitea-registry-secret:
 		--docker-password=admin1234 \
 		-n default
 
+gitea-dump:
+	kubectl exec -it -n gitea \
+		$$(kubectl get pod -n gitea -l app.kubernetes.io/name=gitea -o name | head -1) \
+		-- gitea dump -c /data/gitea/conf/app.ini --type tar.gz -f /tmp/gitea-backup.tar.gz
+
 gitea-backup:
-	kubectl cp gitea/$(kubectl get pod -n gitea \
-	  -l app.kubernetes.io/name=gitea \
+	kubectl cp gitea/$$(kubectl get pod -n gitea \
+		-l app.kubernetes.io/name=gitea \
 		-o name | head -1 | cut -d/ -f2):/tmp/gitea-backup.tar.gz \
 		./gitea-backup.tar.gz
 
 gitea-cp-config:
-	kubectl cp gitea/$(kubectl get pod -n gitea \
+	mkdir -p sensitive/gitea
+	kubectl cp gitea/$$(kubectl get pod -n gitea \
 		-l app.kubernetes.io/name=gitea \
 		-o name | head -1 | cut -d/ -f2):/tmp/gitea-backup.tar.gz \
 		./sensitive/gitea/gitea-backup.tar.gz
