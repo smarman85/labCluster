@@ -587,6 +587,7 @@ gitea:
 	kubectl apply -f experiments/gitea/gitea.yaml
 
 gitea-runner:
+	kubectl apply -f experiments/gitea/cm.yaml
 	kubectl apply -f experiments/gitea/runner.yaml
 
 gitea-registry-secret:
@@ -595,6 +596,18 @@ gitea-registry-secret:
 		--docker-username=gitea-admin \
 		--docker-password=admin1234 \
 		-n default
+
+gitea-backup:
+	kubectl cp gitea/$(kubectl get pod -n gitea \
+	  -l app.kubernetes.io/name=gitea \
+		-o name | head -1 | cut -d/ -f2):/tmp/gitea-backup.tar.gz \
+		./gitea-backup.tar.gz
+
+gitea-cp-config:
+	kubectl cp gitea/$(kubectl get pod -n gitea \
+		-l app.kubernetes.io/name=gitea \
+		-o name | head -1 | cut -d/ -f2):/tmp/gitea-backup.tar.gz \
+		./sensitive/gitea/gitea-backup.tar.gz
 
 
 #### INIT TARGETS ####

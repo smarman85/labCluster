@@ -52,6 +52,41 @@ SSH:    ssh://git@127.0.0.1:2222
 ```
 experiments/gitea/gitea.yaml         → Gitea + PostgreSQL + Valkey
 experiments/gitea/runner.yaml        → Gitea Actions runner
+
+kubectl create secret generic gitea-runner-secret \
+  --from-literal=runner-token=<TOKEN_FROM_GITEA_UI> \
+  -n gitea
+
+```
+
+**Runner files
+```
+# .gitea/workflows/test.yaml
+name: Test Runner
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show runner info
+        run: |
+          echo "Hostname: $(hostname)"
+          echo "Runner: $RUNNER_NAME"
+          echo "Runner OS: $RUNNER_OS"
+          cat /etc/os-release | head -3
+
+      - name: Hello from lab runner
+        run: |
+          echo "Running on $(hostname)"
+          echo "Runner version: $(docker --version)"
+          uname -a
 ```
 
 ---
