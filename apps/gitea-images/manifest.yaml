@@ -18,6 +18,6 @@ spec:
         - name: gitea-registry
       containers:
         - name: test-repo
-          image: gitea-http.gitea.svc.cluster.local:3000/gitea-admin/gitea-sync:865b425e2b92df40895ef8ab61191217ac8edcb8
+          image: gitea-http.gitea.svc.cluster.local:3000/gitea-admin/gitea-sync:b6916a7d87e36272022c1b8ded016de2199ef664
           ports:
             - containerPort: 8080

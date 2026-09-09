@@ -26,6 +26,10 @@ spec:
             packages:
               ENABLED: true
         service:
+          http:
+            type: ClusterIP
+            port: 3000
+            clusterIP: ""
           ssh:
             type: NodePort
             port: 22
