@@ -59,15 +59,23 @@ trust-ca-k3d-podman:
 	done
 
 # Install mkcerts
+install-mkcert-ca:
+	sudo mkdir -p /etc/docker/certs.d/gitea.localhost:8443
+	sudo cp $$(mkcert -CAROOT)/rootCA.pem /etc/docker/certs.d/gitea.localhost:8443/ca.crt
+	sudo cp $$(mkcert -CAROOT)/rootCA.pem /usr/local/share/ca-certificates/mkcert-ca.crt
+	sudo update-ca-certificates
+
+
 install-certs:
 	mkcert -install
-	mkdir -p sensitive
-	cd sensitive && mkcert "*.localhost" "localhost" "127.0.0.1"
+	mkdir -p sensitive/mkcert
+	cd sensitive/mkcert && mkcert "*.localhost" "localhost" "127.0.0.1"
 	kubectl create secret tls traefik-default-cert \
-		--cert=sensitive/_wildcard.localhost+2.pem \
-		--key=sensitive/_wildcard.localhost+2-key.pem \
+		--cert=sensitive/mkcert/_wildcard.localhost+2.pem \
+		--key=sensitive/mkcert/_wildcard.localhost+2-key.pem \
 		-n traefik \
 		--dry-run=client -o yaml | kubectl apply -f -
+	$(MAKE) install-mkcert-ca
 
 #### NAMESPACES ####
 create-namespaces:

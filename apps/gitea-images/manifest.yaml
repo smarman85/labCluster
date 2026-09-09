@@ -2,22 +2,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: test-repo
+  name: gitea-sync
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: test-repo
+      app: gitea-sync
   template:
     metadata:
       labels:
-        app: test-repo
+        app: gitea-sync
     spec:
       imagePullSecrets:
         - name: gitea-registry
       containers:
-        - name: test-repo
-          image: gitea-http.gitea.svc.cluster.local:3000/gitea-admin/gitea-sync:b6916a7d87e36272022c1b8ded016de2199ef664
+        - name: gitea-sync
+          image: gitea.localhost:8443/gitea-admin/gitea-sync:latest
+          imagePullPolicy: IfNotPresent
+          tty: true
+          stdin: true
           ports:
             - containerPort: 8080
