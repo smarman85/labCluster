@@ -1,0 +1,4 @@
+mirrors:
+  gitea-http.gitea.svc.cluster.local:3000:
+    endpoint:
+      - "http://gitea-http.gitea.svc.cluster.local:3000"

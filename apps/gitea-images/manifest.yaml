@@ -1,0 +1,23 @@
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-repo
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-repo
+  template:
+    metadata:
+      labels:
+        app: test-repo
+    spec:
+      imagePullSecrets:
+        - name: gitea-registry
+      containers:
+        - name: test-repo
+          image: gitea-http.gitea.svc.cluster.local:3000/gitea-admin/gitea-sync:865b425e2b92df40895ef8ab61191217ac8edcb8
+          ports:
+            - containerPort: 8080

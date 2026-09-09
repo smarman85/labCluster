@@ -611,6 +611,51 @@ gitea-cp-config:
 
 gitea-backup: gitea-dump gitea-cp-config
 
+gitea-restore:
+	@echo "Copying backup to Gitea pod..."
+	kubectl cp ./sensitive/gitea/gitea-backup.tar.gz \
+		gitea/$$(kubectl get pod -n gitea \
+		-l app.kubernetes.io/name=gitea \
+		-o name | head -1 | cut -d/ -f2):/tmp/gitea-backup.tar.gz
+
+	@echo "Extracting backup..."
+	kubectl exec -n gitea \
+		$$(kubectl get pod -n gitea -l app.kubernetes.io/name=gitea -o name | head -1) -- \
+		sh -c "mkdir -p /tmp/gitea-restore && tar -xzf /tmp/gitea-backup.tar.gz -C /tmp/gitea-restore"
+
+	@echo "Copying SQL to PostgreSQL pod..."
+	kubectl cp gitea/$$(kubectl get pod -n gitea \
+		-l app.kubernetes.io/name=gitea \
+		-o name | head -1 | cut -d/ -f2):/tmp/gitea-restore/gitea-db.sql \
+		/tmp/gitea-db.sql
+	kubectl cp /tmp/gitea-db.sql \
+		gitea/$$(kubectl get pod -n gitea \
+		-l app.kubernetes.io/name=postgresql-ha \
+		-o name | head -1 | cut -d/ -f2):/tmp/gitea-db.sql
+
+	@echo "Restoring database..."
+	kubectl exec -it -n gitea \
+		$$(kubectl get pod -n gitea -l app.kubernetes.io/name=postgresql-ha -o name | head -1) -- \
+		psql -h gitea-postgresql-ha-pgpool.gitea.svc -U gitea -d gitea -f /tmp/gitea-db.sql
+
+	@echo "Restoring repos..."
+	kubectl exec -n gitea \
+		$$(kubectl get pod -n gitea -l app.kubernetes.io/name=gitea -o name | head -1) -- \
+		sh -c "mkdir -p /data/git/gitea-repositories && \
+			cp -r /tmp/gitea-restore/repos/* /data/git/gitea-repositories/ 2>/dev/null || true"
+
+	@echo "Restoring data..."
+	kubectl exec -n gitea \
+		$$(kubectl get pod -n gitea -l app.kubernetes.io/name=gitea -o name | head -1) -- \
+		sh -c "cp -r /tmp/gitea-restore/data/* /data/ 2>/dev/null || true"
+
+	@echo "Restarting Gitea..."
+	kubectl rollout restart deployment gitea -n gitea
+	kubectl wait --for=condition=available --timeout=120s \
+		deployment/gitea -n gitea
+
+	@echo "Gitea restore complete ✓"
+
 
 #### INIT TARGETS ####
 init: build-cluster create-namespaces argocd-2-10 argocd-patch-secret argo-workflows argo-events

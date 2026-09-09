@@ -1,3 +1,4 @@
+---
 apiVersion: k3d.io/v1alpha5
 kind: Simple
 metadata:
@@ -8,7 +9,6 @@ image: rancher/k3s:v1.34.1-k3s1
 kubeAPI:
   host: "127.0.0.1"
   hostPort: "6445"
-
 ports:
   - port: 0.0.0.0:8080:80
     nodeFilters:
@@ -19,12 +19,13 @@ ports:
   - port: 0.0.0.0:2222:30022
     nodeFilters:
       - loadbalancer
-
 volumes:
   - volume: ${PWD}/sensitive/corp-self-signed.crt:/usr/local/share/ca-certificates/corporate.crt
     nodeFilters:
       - all
-
+  - volume: ${PWD}/config/registries.yaml:/etc/rancher/k3s/registries.yaml
+    nodeFilters:
+      - all
 options:
   k3s:
     extraArgs:
