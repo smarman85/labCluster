@@ -77,6 +77,9 @@ install-certs:
 		--dry-run=client -o yaml | kubectl apply -f -
 	$(MAKE) install-mkcert-ca
 
+cert-manager:
+	kubectl apply -f experiments/arc-runners/arc-cert-manager.yaml
+
 #### NAMESPACES ####
 create-namespaces:
 	kubectl create namespace argo
@@ -404,12 +407,12 @@ kargo:
 		-n argocd
 
 	@echo "Applying kargo IngressRoute..."
-	kubectl apply -f infra/kargo/ingressRoute.yaml
+	kubectl apply -f experiments/kargo/ingressRoute.yaml
 
 	@echo "Kargo ready ✓"
 
 kargo-ingress:
-	kubectl apply -f infra/kargo/ingressRoute.yaml
+	kubectl apply -f experiments/kargo/ingressRoute.yaml
 
 #### INGRESS ####
 ingress:
