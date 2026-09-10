@@ -1,0 +1,84 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: dev
+  namespace: podinfo-demo
+spec:
+  requestedFreight:
+  - origin:
+      kind: Warehouse
+      name: podinfo
+    sources:
+      direct: true
+  promotionTemplate:
+    spec:
+      steps:
+      - uses: git-clone
+        config:
+          repoURL: http://gitea-admin:admin1234@gitea-http.gitea.svc.cluster.local:3000/gitea-admin/kargo-local.git
+          checkout:
+          - branch: main
+            path: ./repo
+      - uses: helm-update-chart
+        config:
+          path: ./repo/env/dev
+          charts:
+          - repository: https://stefanprodan.github.io/podinfo
+            name: podinfo
+            version: ${{ chartFrom("https://stefanprodan.github.io/podinfo", "podinfo").Version }}
+      - uses: git-commit
+        config:
+          path: ./repo
+          message: 'chore: update podinfo in dev'
+      - uses: git-push
+        config:
+          path: ./repo
+          targetBranch: main
+      - uses: argocd-update
+        config:
+          apps:
+          - name: podinfo-dev
+            namespace: argocd
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: prod
+  namespace: podinfo-demo
+spec:
+  requestedFreight:
+  - origin:
+      kind: Warehouse
+      name: podinfo
+    sources:
+      stages:
+      - dev
+  promotionTemplate:
+    spec:
+      steps:
+      - uses: git-clone
+        config:
+          repoURL: http://gitea-admin:admin1234@gitea-http.gitea.svc.cluster.local:3000/gitea-admin/kargo-local.git
+          checkout:
+          - branch: main
+            path: ./repo
+      - uses: helm-update-chart
+        config:
+          path: ./repo/env/prod
+          charts:
+          - repository: https://stefanprodan.github.io/podinfo
+            name: podinfo
+            version: ${{ chartFrom("https://stefanprodan.github.io/podinfo", "podinfo").Version }}
+      - uses: git-commit
+        config:
+          path: ./repo
+          message: 'chore: update podinfo in prod'
+      - uses: git-push
+        config:
+          path: ./repo
+          targetBranch: main
+      - uses: argocd-update
+        config:
+          apps:
+          - name: podinfo-prod
+            namespace: argocd

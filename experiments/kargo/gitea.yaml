@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gitea-kargo-creds
+  namespace: kargo
+  labels:
+    kargo.akuity.io/cred-type: git
+type: Opaque
+stringData:
+  repoURL: http://gitea-http.gitea.svc.cluster.local:3000/gitea-admin/kargo-local.git
+  username: gitea-admin
+  password: admin1234
