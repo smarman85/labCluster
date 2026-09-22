@@ -9,7 +9,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/smarman85/labCluster
+    repoURL: git@github.com:smarman85/labCluster.git
     targetRevision: main
     path: charts/sample-deploy
     helm:

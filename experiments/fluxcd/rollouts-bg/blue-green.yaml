@@ -54,4 +54,4 @@ spec:
   interval: 1m
   ref:
     branch: main
-  url: https://github.com/smarman85/kindSampleCluster.git
+  url: git@github.com:smarman85/kindSampleCluster.git

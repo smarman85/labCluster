@@ -11,7 +11,7 @@ spec:
   project: default
   source:
     path: infra/arc-runner/cert-manager
-    repoURL: https://github.com/smarman85/labCluster.git
+    repoURL: git@github.com:smarman85/labCluster.git
     targetRevision: HEAD
   syncPolicy:
     automated:

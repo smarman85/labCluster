@@ -14,7 +14,7 @@ spec:
   project: default
   source:
     path: charts/workflow-loops
-    repoURL: https://github.com/smarman85/kindSampleCluster.git
+    repoURL: git@github.com:smarman85/kindSampleCluster.git
     targetRevision: HEAD
   syncPolicy:
     automated:

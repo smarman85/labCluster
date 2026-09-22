@@ -46,7 +46,9 @@ trust-ca:
 trust-ca-k3d:
 	for node in k3d-lab-server-0 k3d-lab-agent-0 k3d-lab-agent-1; do \
 		docker exec $$node sh -c "cat /usr/local/share/ca-certificates/corporate.crt >> /etc/ssl/certs/ca-certificates.crt"; \
+		docker exec $$node sh -c "kill \$$(pidof containerd) 2>/dev/null || true"; \
 	done
+	sleep 15
 
 trust-ca-podman:
 	podman exec lab-control-plane bash -c "chmod 644 /usr/local/share/ca-certificates/corporate.crt && update-ca-certificates"
@@ -93,6 +95,28 @@ create-namespaces:
 create-namespaces-argo:
 	kubectl create namespace argocd
 
+argocd-repo-ssh:
+	kubectl create secret generic labcluster-repo \
+		--from-literal=type=git \
+		--from-literal=url=git@github.com:smarman85/labCluster.git \
+		--from-file=sshPrivateKey=$(HOME)/.ssh/id_ed25519_personal \
+		-n argocd \
+		--dry-run=client -o yaml | kubectl apply -f -
+	kubectl label secret labcluster-repo \
+		argocd.argoproj.io/secret-type=repository \
+		-n argocd \
+		--overwrite
+	kubectl create secret generic kindsamplecluster-repo \
+		--from-literal=type=git \
+		--from-literal=url=git@github.com:smarman85/kindSampleCluster.git \
+		--from-file=sshPrivateKey=$(HOME)/.ssh/id_ed25519_personal \
+		-n argocd \
+		--dry-run=client -o yaml | kubectl apply -f -
+	kubectl label secret kindsamplecluster-repo \
+		argocd.argoproj.io/secret-type=repository \
+		-n argocd \
+		--overwrite
+
 bootstrap-argo: argocd-upgrade-2-11
 bootstrap-argo: argocd-upgrade-2-11
 	@echo "Waiting for ArgoCD to be ready..."
@@ -104,6 +128,9 @@ bootstrap-argo: argocd-upgrade-2-11
 		-l app.kubernetes.io/name=argocd-application-controller \
 		--timeout=300s \
 		-n argocd
+
+	@echo "Applying SSH repo credentials..."
+		$(MAKE) argocd-repo-ssh
 
 	@echo "Applying gateway-api Application..."
 	kubectl apply -f ./experiments/gateway-api/gateway-api.yaml
@@ -675,7 +702,7 @@ init-self-signed-docker: build-cluster-self-signed trust-ca create-namespaces ar
 init-self-signed-podman: build-cluster-self-signed trust-ca-podman create-namespaces argocd-2-10 argocd-patch-secret argo-workflows argo-events
 init-self-signed-k3d-podman: build-k3d-self-signed create-namespaces traefik-manual trust-ca-k3d-podman
 init-self-signed-k3d-docker: build-k3d-self-signed create-namespaces traefik-manual trust-ca-k3d
-init-self-signed-k3d-argo: build-k3d-self-signed create-namespaces-argo trust-ca-k3d bootstrap-argo traefik-argocd
+init-self-signed-k3d-argo: build-k3d-self-signed create-namespaces-argo trust-ca-k3d bootstrap-argo argocd-repo-ssh traefik-argocd
 init-k3d-podman: build-k3d # trust-ca-k3d-podman
 init-k3d-docker: build-k3d # trust-ca-k3d
 init-flux: build-k3d trust-ca-k3d flux-up

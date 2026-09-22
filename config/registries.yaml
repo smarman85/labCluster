@@ -1,4 +1,11 @@
+configs:
+  "ghcr.io":
+    tls:
+      insecure_skip_verify: true
+  "pkg-containers.githubusercontent.com":
+    tls:
+      insecure_skip_verify: true
 mirrors:
   gitea-http.gitea.svc.cluster.local:3000:
     endpoint:
-      - "http://gitea-http.gitea.svc.cluster.local:3000"
+      - "http://10.43.9.114:3000"
