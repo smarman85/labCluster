@@ -675,7 +675,7 @@ init-self-signed-docker: build-cluster-self-signed trust-ca create-namespaces ar
 init-self-signed-podman: build-cluster-self-signed trust-ca-podman create-namespaces argocd-2-10 argocd-patch-secret argo-workflows argo-events
 init-self-signed-k3d-podman: build-k3d-self-signed create-namespaces traefik-manual trust-ca-k3d-podman
 init-self-signed-k3d-docker: build-k3d-self-signed create-namespaces traefik-manual trust-ca-k3d
-init-self-signed-k3d-argo: build-k3d-self-signed create-namespaces-argo bootstrap-argo trust-ca-k3d traefik-argocd
+init-self-signed-k3d-argo: build-k3d-self-signed create-namespaces-argo trust-ca-k3d bootstrap-argo traefik-argocd
 init-k3d-podman: build-k3d # trust-ca-k3d-podman
 init-k3d-docker: build-k3d # trust-ca-k3d
 init-flux: build-k3d trust-ca-k3d flux-up
