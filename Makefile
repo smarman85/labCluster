@@ -46,9 +46,10 @@ trust-ca:
 trust-ca-k3d:
 	for node in k3d-lab-server-0 k3d-lab-agent-0 k3d-lab-agent-1; do \
 		docker exec $$node sh -c "cat /usr/local/share/ca-certificates/corporate.crt >> /etc/ssl/certs/ca-certificates.crt"; \
-		docker exec $$node sh -c "kill \$$(pidof containerd) 2>/dev/null || true"; \
 	done
-	sleep 15
+	@echo "Waiting for API server..."
+	@until kubectl cluster-info > /dev/null 2>&1; do sleep 2; done
+	kubectl wait --for=condition=ready node --all --timeout=120s
 
 trust-ca-podman:
 	podman exec lab-control-plane bash -c "chmod 644 /usr/local/share/ca-certificates/corporate.crt && update-ca-certificates"
@@ -99,6 +100,7 @@ argocd-repo-ssh:
 	kubectl create secret generic labcluster-repo \
 		--from-literal=type=git \
 		--from-literal=url=git@github.com:smarman85/labCluster.git \
+		--from-literal=insecureIgnoreHostKey=true \
 		--from-file=sshPrivateKey=$(HOME)/.ssh/id_ed25519_personal \
 		-n argocd \
 		--dry-run=client -o yaml | kubectl apply -f -
@@ -109,6 +111,7 @@ argocd-repo-ssh:
 	kubectl create secret generic kindsamplecluster-repo \
 		--from-literal=type=git \
 		--from-literal=url=git@github.com:smarman85/kindSampleCluster.git \
+		--from-literal=insecureIgnoreHostKey=true \
 		--from-file=sshPrivateKey=$(HOME)/.ssh/id_ed25519_personal \
 		-n argocd \
 		--dry-run=client -o yaml | kubectl apply -f -
